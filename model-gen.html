@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://unpkg.com/cannon@0.6.2/build/cannon.min.js"></script>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-thumbstick-states@0.1.0/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-laser-manipulation@0.3.0/dist/laser-manipulation.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.6.0/dist/aframe-extras.min.js"></script>
+  <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+  <script src="../super-keyboard/aframe-super-keyboard.min.js"></script>
+  <script src="./aframe-html.min.js"></script>
+  <script src="db.js"></script>
+  <script src="./model-gen.js"></script>
+  <link rel="stylesheet" href="./model-gen.css">
+</head>
+
+<body>
+  <a-scene background="color: #ECECEC" load-model-library webxr="overlayElement:#dom-overlay;">
+
+    <a-assets>
+      <!-- <a-asset-item id="stag" src="../Video13-Assets/stag.glb"></a-asset-item>
+      <a-asset-item id="model2" src="../Video13-Assets/generated_model.glb"></a-asset-item>
+      <a-asset-item id="model3" src="../Video13-Assets/generated_model (1).glb"></a-asset-item> -->
+      <img id="update" src="./update.png">
+    </a-assets>
+
+    <a-light type="ambient" color="#888"></a-light>
+    <a-light type="directional" intensity="0.8" position="-1 1 2"></a-light>
+    <a-light type="directional" intensity="0.8" position="9 5 -9"></a-light>
+
+    <a-plane rotation="-90 0 0" scale="100 100 1" color="#777"></a-plane>
+
+
+    <!-- Cursor Component
+        <a-entity camera="active: true;" position="0 1.6 1" look-controls wasd-controls>
+            <a-entity cursor
+                      position="0 0 -1"
+                      geometry="primitive: sphere; radius: 0.008;"
+                      material="color: black; shader: flat; opacity: 0.5;">
+            </a-entity>
+        </a-entity> -->
+
+    <!-- VR Rig Component -->
+    <a-entity id="rig" movement-controls="controls: gamepad, keyboard;" position="0 0 0">
+      <!-- Camera -->
+      <a-entity camera position="0 1.6 0" look-controls id="camera">
+      </a-entity>
+      <a-entity light="type: point;
+                            intensity: 2;
+                            distance: 5;
+                            castShadow: true;" position="0 1.6 0">
+      </a-entity>
+
+      <a-entity id="mouseCursor" cursor="rayOrigin: mouse" raycaster="objects: .clickable, .grabbable"
+        mouse-manipulation>
+      </a-entity>
+
+      <!-- Controllers -->
+      <a-entity id="lhand" laser-controls="hand: left"
+        raycaster="objects: .clickable, [html]; far: Infinity; lineColor: blue; lineOpacity: 0.5"
+        meta-touch-controls="hand: left">
+      </a-entity>
+      <a-entity id="rhand" laser-controls="hand: right"
+        raycaster="objects: .grabbable; far: Infinity; lineColor: red; lineOpacity: 0.5" laser-manipulation
+        thumbstick-states__right="controller:#rhand;
+                                            tBindings:moving-in,moving-out,rotating-y-plus,rotating-y-minus;
+                                            tgBindings:rotating-x-plus,rotating-x-minus,rotating-y-plus,rotating-y-minus"
+        meta-touch-controls="hand: right">
+        <!-- Model Library attached to controller html="html: #VR-library; cursor: #mouseCursor"-->
+        <a-entity 
+                  position="0.6 0.1 0"
+                  rotation="-90 0 0">
+          <div id="VR-library">
+            <section class="library-interface">
+              <h2>Model Library</h2>
+              <div class="library-scroller">
+                
+              </div>
+            </section>
+          </div>
+        </a-entity>
+      </a-entity>
+
+
+    </a-entity>
+
+
+
+    <!-- In-Environment Menu -->
+    <a-box id="menu-background" position="0 2.5 -5" colour="#555555" scale="5 5 0.1">
+      <a-box id="image-box" position="-0.3 -0.3 0.1" scale="0.25 0.25 1" color="#00AA66" class="clickable"
+        generate-image>
+        <a-text id="message" value="Generate Image" align="center" position="0 0 0.51" width="2" color="black"></a-text>
+      </a-box>
+
+      <a-box id="model-box" position="0.3 -0.3 0.1" scale="0.25 0.25 1" color="#AA0066" class="clickable"
+        generate-model>
+        <a-text value="Create Model" align="center" position="0 0 0.51" width="2" color="black"></a-text>
+      </a-box>
+      
+      <a-image id="loading-image" position="0 0.25 1.01" scale="0.15 0.15 1" src="#update" visible="false" material="transparent: true; alphaTest: 0.8;" animation="property: rotation; to: 0 0 360; loop: true; dur: 3000; easing: linear;"></a-image>
+      <a-image id="image" position="0 0.25 1" scale="0.33 0.33 1" src="#" visible="false"></a-image>
+
+      <a-text id="instruction" value="Type your prompt:" align="center" position="0 0.05 1" scale="0.2 0.2 1"
+        color="black"></a-text>
+
+      <a-text id="prompt" value="Prompt" align="center" position="0 -0.05 1" scale="0.3 0.3 1" color="black"></a-text>
+
+      <a-text id="error" visible="false" value="Error Message" align="center" position="0 -0.15 1" scale="0.2 0.2 1"
+        color="black"></a-text>
+    </a-box>
+    <a-entity id="keyboard" super-keyboard="hand: #mouseCursor; imagePath:../super-keyboard/; multipleInputs: true;"
+      position="0 0.7 -4.5" rotation="-30 0 0">
+    </a-entity>
+    <!-- <a-image id="loading-image" position="0 3.75 -4.89" scale="0.5 0.5 1" src="#update" visible="true" animation="property: rotation; to: 0 0 360; loop: true; dur: 3000; easing: linear;"></a-image> -->
+
+  </a-scene>
+
+  <div id="desktop-ui">
+    <section class="browser-prompt-entry">
+    
+      <h2>Type Your Prompt Here</h2>
+      <form id="desktop-prompt-form">
+        <input type="text" id="desktop-prompt-input" placeholder="Prompt...">
+        <button type="submit">Submit</button>
+      </form>
+
+    </section>
+
+    <section class="desktop-model-interaction">
+      <h2 id="desktop-model-name">Model</h2>
+      <fieldset id="custom-size-input-desktop" data-value="1" data-min="0.25" data-max="5" data-step="0.25">
+        <legend>Scale:</legend>
+        <div class="size-input">
+          <button onclick="updateSize(-1)">-</button>
+          <span class="size-value-display">1</span>
+          <button onclick="updateSize(1)">+</button>
+        </div>
+      </fieldset>
+      <div class="model-buttons">
+        <button onclick="removeModel()">Remove</button>
+      </div>
+    </section>
+
+    <section class="library-interface">
+      <h2>Model Library</h2>
+      <div class="library-scroller">
+        
+        
+      </div>
+    </section>
+  </div>
+
+  <div id="vr-ui-source">
+    <section class="desktop-model-interaction">
+      <h2>Change Size</h2>
+      <fieldset id="custom-size-input-vr" data-value="1" data-min="0.25" data-max="5" data-step="0.25"
+        style="border-radius: 1em;">
+        <legend>Scale:</legend>
+        <div class="size-input">
+          <button onclick="updateSize(-1)">-</button>
+          <span class="size-value-display">1</span>
+          <button onclick="updateSize(1)">+</button>
+        </div>
+      </fieldset>
+    </section>
+  </div>
+
+  
+
+  <div class="model-card" id="model-card-template">
+    <h3 class="model-name"></h3>
+    <img class="model-image" src="#" alt="">
+
+    <div class="card-overlay">
+      <button class="card-button" data-action="add">Add to Scene</button>
+      <button class="card-button" data-action="delete">Delete Asset</button>
+    </div>
+  </div>
+
+  <script>
+    // Wait for the page content to load before running the script
+    document.addEventListener('DOMContentLoaded', async () => {
+      // const vrButton = document.getElementById('vr-mode-button');
+
+      // Check if the device supports VR
+      const hasVR = await checkVRSupport();
+
+      if (hasVR) {
+        // If VR is supported
+        console.log("VR is supported on this device.");
+        document.getElementById('keyboard').setAttribute('super-keyboard', {
+          hand: '#lhand, #rhand',
+          imagePath: '../super-keyboard/',
+          multipleInputs: 'true'
+        });
+
+        // super-keyboard="hand: #mouseCursor; imagePath:../super-keyboard/; multipleInputs: true;"
+
+        //vrButton.classList.remove('hidden');
+      } else {
+        // If not supported
+        console.log("VR is not supported on this device.");
+      }
+
+      document.getElementById('desktop-prompt-form').addEventListener('submit', function(event) {
+        // Prevent the form from reloading the page
+        event.preventDefault(); 
+        
+        const input = document.getElementById('desktop-prompt-input');
+        const promptValue = input.value;
+
+        if (promptValue) {
+          console.log("Desktop Prompt Submitted:", promptValue);
+          
+          // Set the prompt value on the in-world text entity
+          document.getElementById('prompt').setAttribute('value', promptValue);
+
+          // Optionally, clear the input field after submission
+          input.value = ''; 
+        }
+      });
+
+    });
+
+    let isInVR = false;
+    const sceneEl = document.querySelector('a-scene');
+    const desktopUi = document.getElementById('desktop-ui');
+
+    sceneEl.addEventListener('enter-vr', function () {
+      isInVR = true;
+      desktopUi.style.display = 'none'; // Simply hide the desktop UI
+    });
+
+    sceneEl.addEventListener('exit-vr', function () {
+      isInVR = false;
+      desktopUi.style.display = 'block'; // Show the desktop UI again
+
+      const activePanel = document.getElementById('active-ui-panel');
+      if (activePanel) {
+        activePanel.parentNode.removeChild(activePanel);
+      }
+    });
+
+    document.getElementById('keyboard').addEventListener('superkeyboardinput', function (event) {
+      console.log(event);
+      console.log("Keyboard Input: ", event.detail.value);
+      document.getElementById('prompt').setAttribute('value', event.detail.value)
+    });
+
+    // This function now updates BOTH UIs to keep them in sync
+    function setSizeValue(value) {
+      document.querySelectorAll('.size-input').forEach(container => {
+        const display = container.querySelector('.size-value-display');
+        const fieldset = container.closest('fieldset');
+        const min = parseFloat(fieldset.dataset.min);
+        const max = parseFloat(fieldset.dataset.max);
+
+        const clampedValue = Math.max(min, Math.min(value, max));
+        fieldset.dataset.value = clampedValue;
+        if (display) display.textContent = clampedValue.toFixed(2);
+      });
+    }
+
+    // This function also updates BOTH UIs
+    function updateSize(direction) {
+      // We only need to read the state from one of them
+      const fieldset = document.getElementById('custom-size-input-desktop');
+      let currentValue = parseFloat(fieldset.dataset.value);
+      const step = parseFloat(fieldset.dataset.step);
+      let newValue = currentValue + (direction * step);
+
+      // This will update both displays via the shared setSizeValue function
+      setSizeValue(newValue);
+
+      handleRange({ value: newValue });
+    }
+  </script>
+</body>
+
+</html>

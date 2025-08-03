@@ -1,0 +1,205 @@
+* {
+    box-sizing: border-box;
+}
+
+#desktop-ui {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding: 10px 0 10px 10px;
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    gap: 5px;
+    max-height: 100vh;
+
+    /* "position: absolute; top: 10px; left: 10px;" */
+}
+
+.browser-prompt-entry,
+.desktop-model-interaction,
+.library-interface {
+    display: flex;
+    gap: 5px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background: azure;
+    color: #333333;
+    border-radius: 1em;
+    padding: 0.5em 0.8em;
+    accent-color: powderblue;
+    font-family: Arial, Helvetica, sans-serif;
+
+    h2 {
+        font-size: 1.2em;
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+.desktop-model-interaction {
+    display: none;
+}
+
+.browser-prompt-entry form {
+    width: 100%;
+    display: flex;
+    gap: 5px;
+    flex-direction: column;
+}
+
+.browser-prompt-entry form input,
+.browser-prompt-entry form button,
+.model-buttons button {
+    border: 1px solid powderblue;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.browser-prompt-entry form button,
+.model-buttons button {
+    background-color: white;
+    cursor: pointer;
+}
+
+.browser-prompt-entry form button:hover,
+.model-buttons button:hover {
+    background-color: powderblue;
+}
+
+.size-input {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.desktop-model-interaction fieldset {
+    border: 1px solid powderblue;
+    border-radius: 1em;
+}
+
+.size-input button {
+    font-weight: bold;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid powderblue;
+    background-color: white;
+    cursor: pointer;
+}
+
+.size-input button:hover {
+    background: powderblue;
+}
+
+.size-value-display {
+    font-size: 1.2em;
+    min-width: 40px;
+    text-align: center;
+}
+
+#vr-ui-source {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: -1;
+}
+
+.library-interface {
+    /* max-height: 65vh; */
+    overflow: hidden;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+
+    h2 {
+        margin-bottom: 0.25em;
+    }
+}
+
+.library-scroller {
+    /* height: 99%; */
+    overflow-y: scroll;
+    /* overflow-x: hidden; */
+    padding: 1em;
+    flex: 1;
+    min-height: 0;
+}
+
+#VR-library {
+    height: 200px;
+    width: 200px;
+}
+
+.model-card {
+    position: relative;
+    background: paleturquoise;
+    border-radius: 1em;
+    padding: 0.5em;
+    margin: 0.5em 0;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.model-image {
+    width: 100%;
+    border-radius: 0.5em;
+}
+
+.model-card:hover {
+    transform: scale(1.03);
+}
+
+.model-card.selected .model-image {
+    filter: brightness(0.4);
+}
+
+.card-overlay {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(95, 158, 160, 0.8);
+    border-radius: 1em;
+    
+    /* Centre the buttons inside */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+/* When the card has the 'selected' class, show the overlay */
+.model-card.selected .card-overlay {
+    display: flex;
+}
+
+.card-overlay .card-button {
+    padding: 8px 12px;
+    border: none;
+    background-color: azure;
+    color: #333;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 80%;
+    font-weight: bold;
+}
+
+.card-overlay .card-button:hover {
+    background-color: powderblue;
+}
+
+.card-overlay .card-button[data-action="delete"] {
+    background-color: salmon;
+}
+
+.card-overlay .card-button[data-action="delete"]:hover {
+    background-color: tomato;
+}
