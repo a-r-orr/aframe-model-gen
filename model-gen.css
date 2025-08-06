@@ -66,8 +66,21 @@
 }
 
 .browser-prompt-entry form button:hover,
-.model-buttons button:hover {
+.model-buttons button:hover,
+.image-upload-button:hover {
     background-color: powderblue;
+}
+
+.image-upload-button {
+    display: block;
+    width: 100%;
+    margin-top: 5px;
+    text-align: center;
+    border: 1px solid powderblue;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: white;
+    cursor: pointer;
 }
 
 .size-input {
@@ -102,13 +115,6 @@
     text-align: center;
 }
 
-#vr-ui-source {
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    z-index: -1;
-}
-
 .library-interface {
     /* max-height: 65vh; */
     overflow: hidden;
@@ -122,17 +128,10 @@
 }
 
 .library-scroller {
-    /* height: 99%; */
     overflow-y: scroll;
-    /* overflow-x: hidden; */
     padding: 1em;
     flex: 1;
     min-height: 0;
-}
-
-#VR-library {
-    height: 200px;
-    width: 200px;
 }
 
 .model-card {
@@ -177,7 +176,8 @@
 }
 
 /* When the card has the 'selected' class, show the overlay */
-.model-card.selected .card-overlay {
+.model-card.selected .card-overlay,
+.model-card.selected .card-actions {
     display: flex;
 }
 
@@ -203,3 +203,95 @@
 .card-overlay .card-button[data-action="delete"]:hover {
     background-color: tomato;
 }
+
+.card-confirmation,
+.card-actions {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.confirmation-buttons {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+}
+
+/* When a card gets the .is-deleting class */
+.model-card.is-deleting .card-actions {
+    display: none; /* hide the normal action buttons */
+}
+
+.model-card.is-deleting .card-confirmation {
+    display: flex; /* and show the confirmation prompt. */
+}
+
+
+.card-button[data-action="confirm-delete"] {
+    background-color: salmon;
+    color: #721c24;
+}
+.card-button[data-action="confirm-delete"]:hover {
+    background-color: tomato;
+}
+
+#desktop-warning {
+    position: absolute;
+    bottom: 0px;
+    left: 25%;
+    padding: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    gap: 5px;
+}
+
+#desktop-warning p {
+    margin: 0;
+    padding: 5px;
+    background-color: rgba(95, 158, 160, 0.3);
+}
+
+
+#vr-ui-source {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* opacity: 0; */
+    pointer-events: none;
+    z-index: -1;
+}
+
+#vr-library {
+    display: flex;
+    width: 1000px;
+    height: 600px;
+}
+
+#vr-library .library-scroller {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#vr-library .model-card {
+    width: 200px;
+    max-height: 300px;
+}
+
+#vr-library .model-card h3 {
+    width: 180px;
+    overflow-wrap: break-word;
+    text-align: center;
+    white-space: pre-wrap;
+}
+
+
+/* In model-gen.css, replace all existing #vr-library rules with this block */

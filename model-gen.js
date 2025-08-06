@@ -1,3 +1,8 @@
+// API Endpoints
+const IMAGE_API_URL = 'https://192.168.0.33/image/images/create-image';
+const MODEL_API_URL = 'https://192.168.0.33/model/models/create-from-image';
+
+
 // This function checks for VR support and returns true or false.
 async function checkVRSupport() {
     // Check if the WebXR API is available in the browser
@@ -16,179 +21,41 @@ async function checkVRSupport() {
     }
 }
 
-AFRAME.registerComponent('load-model-library', {
-    async init() {
-        console.log("Starting to load library...");
-        try {
-            await initDB();
-            const assets = await getAllAssets();
-            console.log(`Retrieved ${assets.length} saved asset records.`);
-            console.log(assets);
-
-            const libraries = document.getElementsByClassName('library-scroller');
-            const sceneEl = this.el;
-
-            let i = 0;
-            var xPos = 2;
-            for (const asset of assets) {
-                const modelUrl = URL.createObjectURL(asset.modelBlob);
-                const new_model = document.createElement('a-entity');
-
-                /*
-                // This adds all existing models to the scene
-                // COMMENTED SECTION TO BE DELETED ONCE SYSTEM WORKS
-                new_model.setAttribute('gltf-model', modelUrl);
-
-                // Arrange models in a row to avoid overlap
-                if (!asset.scale) {
-                    xPos += 2;
-                } else {
-                    xPos += parseInt(asset.scale) / 2 + 1;
-                }
-
-                console.log(xPos);
-
-                new_model.setAttribute('position', `${xPos} 0.5 -4`);
-                new_model.setAttribute('model-entity', '');
-                new_model.setAttribute('name', asset.prompt);
-                new_model.setAttribute('model-scale', asset.scale);
-
-                const modelId = `model-${asset.id}`;
-                new_model.setAttribute('id', modelId);
-
-                // const bounding_box = document.createElement('a-box');
-                // bounding_box.setAttribute('material', 'color: red; opacity: 0.2;');
-                // bounding_box.setAttribute('size', '1 1 1');
-                // new_model.appendChild(bounding_box);
-
-                sceneEl.appendChild(new_model);
-                console.log(`Loaded model "${asset.prompt}" into the scene.`);
-
-                if (asset.scale) {
-                    xPos += parseInt(asset.scale) / 2;
-                }
-
-                i++;
-                */
-
-                const model_card = document.getElementById('model-card-template');
-                const new_card = model_card.cloneNode(true);
-                new_card.removeAttribute('id');
-                new_card.getElementsByClassName('model-name')[0].innerText = asset.prompt;
-                const modelImageUrl = URL.createObjectURL(asset.imageBlob);
-                new_card.getElementsByClassName('model-image')[0].setAttribute('src', modelImageUrl);
-
-                new_card.setAttribute('model-id', asset.id)
-
-                for (const lib of libraries) {
-                    lib.appendChild(new_card.cloneNode(true));
-                }
-            }
-
-            // Add Event Listener to each card in both "model libraries".
-            // When clicked, the model associated with the card is added to the scene.
-            // for (const lib of libraries) {
-            //     const cards = lib.getElementsByClassName('model-card');
-            //     for (const card of cards) {
-            //         card.addEventListener('click', async () => {
-            //             console.log('click', card);
-            //             try {
-            //                 console.log(card.getAttribute('model-id'));
-            //                 const this_asset = await getAsset(parseInt(card.getAttribute('model-id')));
-            //                 console.log('this_asset: ', this_asset);
-            //                 const this_modelUrl = URL.createObjectURL(this_asset.modelBlob);
-
-            //                 var this_model = document.createElement('a-entity');
-            //                 this_model.setAttribute('gltf-model', this_modelUrl);
-
-            //                 this_model.setAttribute('model-entity', '');
-            //                 this_model.setAttribute('name', this_asset.prompt);
-            //                 this_model.setAttribute('model-scale', this_asset.scale);
-
-            //                 const modelId = `model-${this_asset.id}`;
-            //                 this_model.setAttribute('id', modelId);
-
-            //                 this_model.setAttribute('position', '5 0.5 -5');
-            //                 this_model.setAttribute('class', 'grabbable clickable');
-            //                 sceneEl.appendChild(this_model);
-            //             } catch (cardError) {
-            //                 console.error(cardError);
-            //             }
-            //         });
-            //     }
-            // }
-
-            for (const lib of libraries) {
-                const cards = lib.getElementsByClassName('model-card');
-                for (const card of cards) {
-
-                    // --- Logic for the card itself ---
-                    card.addEventListener('click', () => {
-                        // Check if the clicked card is already selected
-                        const isAlreadySelected = card.classList.contains('selected');
-
-                        // First, deselect all other cards in this library
-                        for (const otherCard of cards) {
-                            otherCard.classList.remove('selected');
-                        }
-
-                        // If the card wasn't already selected, select it now.
-                        // This makes it so clicking a selected card deselects it.
-                        if (!isAlreadySelected) {
-                            card.classList.add('selected');
-                        }
-                    });
-
-                    // --- Logic for the buttons on the overlay ---
-                    const addButton = card.querySelector('[data-action="add"]');
-                    const deleteButton = card.querySelector('[data-action="delete"]');
-
-                    // ADD TO SCENE BUTTON
-                    addButton.addEventListener('click', async (event) => {
-                        event.stopPropagation(); // Prevents the card click event from firing too.
-                        console.log('Add to Scene clicked for model ID:', card.getAttribute('model-id'));
-
-                        try {
-                            const assetId = parseInt(card.getAttribute('model-id'));
-                            const asset = await getAsset(assetId);
-                            const modelUrl = URL.createObjectURL(asset.modelBlob);
-                            const modelId = `model-${assetId}`;
-                            const newModel = document.createElement('a-entity');
-                            newModel.setAttribute('gltf-model', modelUrl);
-                            newModel.setAttribute('model-entity', '');
-                            newModel.setAttribute('name', asset.prompt);
-                            newModel.setAttribute('id', modelId);
-                            newModel.setAttribute('model-scale', asset.scale);
-                            newModel.setAttribute('position', '5 0.5 -5'); // Or any desired position
-
-                            sceneEl.appendChild(newModel);
-
-                            // Deselect the card after adding
-                            card.classList.remove('selected');
-
-                        } catch (addError) {
-                            console.error("Error adding model to scene:", addError);
-                        }
-                    });
-
-                    // DELETE ASSET BUTTON
-                    deleteButton.addEventListener('click', (event) => {
-                        event.stopPropagation(); // VERY IMPORTANT
-                        console.log('Delete Asset clicked for model ID:', card.getAttribute('model-id'));
-
-                        // Add your logic here to delete the asset from the database
-                        // For example:
-                        // const assetId = parseInt(card.getAttribute('model-id'));
-                        // await deleteAsset(assetId);
-                        // card.remove(); // Remove the card from the UI
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Could not load asset library: ', error);
-        }
+/**
+ * Inserts newline characters into a string to wrap it at a given character length.
+ * Tries to break lines at spaces.
+ * @param {string} text The text to wrap.
+ * @param {number} maxLength The maximum number of characters per line.
+ * @returns {string} The formatted text with newline characters.
+ */
+function wrapText(text, maxLength) {
+    if (text.length <= maxLength) {
+        return text;
     }
-});
+
+    const words = text.split(' ');
+    let currentLine = '';
+    const lines = [];
+
+    words.forEach(word => {
+        if ((currentLine + word).length > maxLength) {
+            lines.push(currentLine.trim());
+            currentLine = '';
+        }
+        currentLine += word + ' ';
+    });
+
+    lines.push(currentLine.trim());
+    return lines.join('\n');
+}
+
+function removeModel() {
+    const selectedModelID = document.body.dataset.selectedElementId;
+    const selectedModelEl = document.getElementById(selectedModelID);
+    selectedModelEl.remove();
+    const desktopUi = document.getElementsByClassName('desktop-model-interaction');
+    desktopUi[0].style.display = 'none';
+}
 
 async function handleRange(detail) {
     console.log(detail);
@@ -214,6 +81,231 @@ async function handleRange(detail) {
     }
 }
 
+async function addToScene(assetId) {
+    console.log('Add to Scene clicked for model ID:', assetId);
+
+    try {
+        const asset = await getAsset(assetId);
+        const modelUrl = URL.createObjectURL(asset.modelBlob);
+        const modelId = `model-${assetId}`;
+        const newModel = document.createElement('a-entity');
+        newModel.setAttribute('gltf-model', modelUrl);
+        newModel.setAttribute('model-entity', '');
+        newModel.setAttribute('name', asset.prompt);
+        newModel.setAttribute('id', modelId);
+        newModel.setAttribute('model-scale', asset.scale);
+        newModel.setAttribute('position', '5 0.5 -5'); // Or any desired position
+
+        newModel.addEventListener('model-loaded', () => {
+            console.log(`Model "${asset.prompt}" has loaded, revoking URL.`);
+            URL.revokeObjectURL(modelUrl);
+        });
+
+        sceneEl.appendChild(newModel);
+    } catch (addError) {
+        console.error("Error adding model to scene:", addError);
+    }
+}
+
+async function downloadModel(assetId) {
+    try {           
+        const asset = await getAsset(assetId);
+        const modelUrl = URL.createObjectURL(asset.modelBlob);
+
+        const link = document.createElement('a');
+        link.style.display = 'none';
+
+        // Set the URL and the desired filename for the download
+        link.href = modelUrl;
+        link.download = `${asset.prompt.replace(/\s/g, '_')}.glb`;
+
+        // Add a link to the page, click it to trigger the download, then remove it
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(modelUrl);
+    } catch (downloadError) {
+        console.error("Error downloading model:", downloadError);
+    }
+}
+
+AFRAME.registerComponent('scene-setup', {
+    init: function () {
+        console.log('Scene setup component initialized.');
+        const sceneEl = this.el;
+
+        document.getElementById('desktop-prompt-form').addEventListener('submit', function (event) {
+            // Prevent the form from reloading the page
+            event.preventDefault();
+
+            const input = document.getElementById('desktop-prompt-input');
+            const promptValue = input.value;
+
+            if (promptValue) {
+                console.log("Desktop Prompt Submitted:", promptValue);
+
+                // Set the prompt value on the in-world text entity
+                document.getElementById('prompt').setAttribute('value', promptValue);
+
+                // Optionally, clear the input field after submission
+                input.value = '';
+            }
+        });
+
+        const imageUploadInput = document.getElementById('image-upload-input');
+
+        imageUploadInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (files.length === 0) { return; }
+            const loadingEl = document.getElementById('loading-image');
+            loadingEl.setAttribute('visible', 'false');
+
+            try {
+                const uploadedFile = files[0];
+                console.log('User uploaded image:', uploadedFile.name);
+
+                // Emit the 'image-ready' event on the scene
+                sceneEl.emit('image-ready', {
+                    prompt: uploadedFile.name,
+                    imageBlob: uploadedFile
+                });
+
+                // Display the uploaded image in the in-world menu
+                const imageEl = document.getElementById('image');
+
+                const imageUrl = URL.createObjectURL(uploadedFile);
+
+                const loader = new THREE.TextureLoader();
+                loader.load(imageUrl, (texture) => {
+                    const mesh = imageEl.getObject3D('mesh');
+                    if (mesh) {
+                        mesh.material.map = texture;
+                        mesh.material.needsUpdate = true;
+                    }
+                });
+                imageEl.setAttribute('visible', 'true');
+            } catch (error) {
+                console.log(`Error uploading image: ${error}`);
+            } finally {
+                loadingEl.setAttribute('visible', 'false');
+            }
+        });
+    }
+});
+
+AFRAME.registerComponent('load-model-library', {
+    async init() {
+        console.log("Starting to load library...");
+        try {
+            await initDB();
+            const assets = await getAllAssets();
+            console.log(`Retrieved ${assets.length} saved asset records.`);
+            console.log(assets);
+
+            const libraries = document.getElementsByClassName('library-scroller');
+            const sceneEl = this.el;
+
+            let i = 0;
+            var xPos = 2;
+            for (const asset of assets) {
+                const modelUrl = URL.createObjectURL(asset.modelBlob);
+                const new_model = document.createElement('a-entity');
+
+                const model_card = document.getElementById('model-card-template');
+                const new_card = model_card.cloneNode(true);
+                new_card.removeAttribute('id');
+                new_card.getElementsByClassName('model-name')[0].innerText = wrapText(asset.prompt, 20);
+                const modelImageUrl = URL.createObjectURL(asset.imageBlob);
+                new_card.getElementsByClassName('model-image')[0].setAttribute('src', modelImageUrl);
+
+                new_card.setAttribute('model-id', asset.id)
+
+                for (const lib of libraries) {
+                    lib.appendChild(new_card.cloneNode(true));
+                }
+            }
+
+            for (const lib of libraries) {
+                const cards = lib.getElementsByClassName('model-card');
+                for (const card of cards) {
+
+                    // Logic for the card itself
+                    card.addEventListener('click', () => {
+                        // Check if the clicked card is already selected
+                        const isAlreadySelected = card.classList.contains('selected');
+
+                        // First, deselect all cards in this library
+                        for (const otherCard of cards) {
+                            otherCard.classList.remove('selected');
+                        }
+
+                        // If the card wasn't already selected, select it now.
+                        // This makes it so clicking a selected card deselects it.
+                        if (!isAlreadySelected) {
+                            card.classList.add('selected');
+                        }
+                    });
+
+                    // Logic for the buttons on the model card overlay
+                    const addButton = card.querySelector('[data-action="add"]');
+                    const downloadButton = card.querySelector('[data-action="download"]');
+                    const deleteButton = card.querySelector('[data-action="delete"]');
+                    const confirmDeleteButton = card.querySelector('[data-action="confirm-delete"]');
+                    const cancelDeleteButton = card.querySelector('[data-action="cancel-delete"]');
+
+                    const assetId = parseInt(card.getAttribute('model-id'));
+
+                    // Add to Scene Button
+                    addButton.addEventListener('click', async (event) => {
+                        event.stopPropagation(); // Prevents the card click event from firing too.
+                        console.log('Add to Scene clicked for model ID:', card.getAttribute('model-id'));
+                        
+                        await addToScene(assetId);
+                    });
+
+                    // Download Button
+                    downloadButton.addEventListener('click', async (event) => {
+                        event.stopPropagation();
+                        console.log('Download button clicked for model ID:', card.getAttribute('model-id'));
+
+                        await downloadModel(assetId);
+                        
+                    });
+
+                    // Delete Asset Button
+                    deleteButton.addEventListener('click', async (event) => {
+                        event.stopPropagation();
+                        card.classList.add('is-deleting');
+                    });
+
+                    // Cancel Delete Button
+                    cancelDeleteButton.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        // Remove the class to hide the prompt and show the original buttons
+                        card.classList.remove('is-deleting');
+                    });
+
+                    // Confirm Delete Button
+                    confirmDeleteButton.addEventListener('click', async (event) => {
+                        event.stopPropagation();
+                        console.log('Confirmed delete for model ID:', card.getAttribute('model-id'));
+
+                        try {
+                            await deleteAsset(assetId); // Delete from the database
+                            card.remove(); // Remove the card from the UI
+                        } catch (deleteError) {
+                            console.error("Error deleting asset:", deleteError);
+                            card.classList.remove('is-deleting');
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Could not load asset library: ', error);
+        }
+    }
+});
+
 AFRAME.registerComponent('model-entity', {
     init: function () {
         const el = this.el;
@@ -225,6 +317,33 @@ AFRAME.registerComponent('model-entity', {
             el.object3D.position.y = scale / 2;
 
         }
+        const mouseCursor = document.getElementById('mouseCursor');
+
+        el.addEventListener('mouseenter', () => {
+            if (!mouseCursor.hasAttribute('mouse-manipulation')) {
+                mouseCursor.setAttribute('mouse-manipulation', '');
+            }
+        });
+
+        el.addEventListener('mousedown', () => {
+            mouseCursor.setAttribute('dragging', 'true')
+        });
+
+        el.addEventListener('mouseup', () => {
+            mouseCursor.setAttribute('dragging', 'false')
+            // Use setTimeout with a zero delay to push the removal to the next event loop tick.
+            setTimeout(() => {
+                if (mouseCursor.hasAttribute('mouse-manipulation')) {
+                    mouseCursor.removeAttribute('mouse-manipulation');
+                }
+            }, 0);
+        });
+
+        el.addEventListener('mouseleave', () => {
+            if (!mouseCursor.getAttribute('dragging')) {
+                mouseCursor.removeAttribute('mouse-manipulation');
+            }
+        });
 
         el.addEventListener('click', function (event) {
             event.stopPropagation();
@@ -248,7 +367,7 @@ AFRAME.registerComponent('model-entity', {
                 uiPanel.setAttribute('id', 'active-ui-panel');
                 uiPanel.dataset.attachedTo = el.id;
                 // Point to the correct source
-                uiPanel.setAttribute('html', { html: '#vr-ui-source', cursor: '#mouseCursor' });
+                uiPanel.setAttribute('html', { html: '#vr-model-settings', cursor: '#mouseCursor' });
                 uiPanel.setAttribute('position', '0 1 -1.5');
                 uiPanel.setAttribute('scale', '2 2 2');
                 cameraRig.appendChild(uiPanel);
@@ -270,17 +389,19 @@ AFRAME.registerComponent('model-entity', {
 AFRAME.registerComponent('generate-image', {
     schema: { color: { default: 'red' } },
     init: function () {
+        const mouseCursor = document.getElementById('mouseCursor');
         var data = this.data;
         var el = this.el;
         var defaultColor = el.getAttribute('material').color;
 
-        // API Endpoints
-        const IMAGE_API_URL = 'https://192.168.0.33/image/images/create-image';
         const prompt = document.getElementById('prompt').getAttribute('value');
         console.log(prompt);
 
         el.addEventListener('mouseenter', function () {
             el.setAttribute('color', data.color);
+            if (mouseCursor.hasAttribute('mouse-manipulation') && mouseCursor.getAttribute('dragging') == 'false') {
+                mouseCursor.removeAttribute('mouse-manipulation');
+            }
         });
         el.addEventListener('mouseleave', function () {
             el.setAttribute('color', defaultColor);
@@ -321,6 +442,8 @@ AFRAME.registerComponent('generate-image', {
                 });
                 imageEl.setAttribute('visible', 'true');
                 loadingEl.setAttribute('visible', 'false');
+                document.getElementById('error').setAttribute('value', '');
+                document.getElementById('error').setAttribute('visible', 'false');
 
             } catch (error) {
                 console.error('Error fetching image:', error);
@@ -343,6 +466,9 @@ AFRAME.registerComponent('generate-model', {
 
         el.addEventListener('mouseenter', function () {
             el.setAttribute('color', data.color);
+            if (mouseCursor.hasAttribute('mouse-manipulation') && mouseCursor.getAttribute('dragging') == 'false') {
+                mouseCursor.removeAttribute('mouse-manipulation');
+            }
         });
         el.addEventListener('mouseleave', function () {
             el.setAttribute('color', defaultColor);
@@ -365,6 +491,7 @@ AFRAME.registerComponent('generate-model', {
         el.addEventListener('click', async () => {
             if (!this.imageToSend) {
                 console.error("Model generator clicked, but no image is ready!");
+                document.getElementById('error').setAttribute('visible', 'true');
                 document.getElementById('error').setAttribute('value', 'Generate an image first');
                 return;
             }
@@ -377,7 +504,6 @@ AFRAME.registerComponent('generate-model', {
                 const loadingEl = document.getElementById('loading-image');
                 loadingEl.setAttribute('visible', 'true');
 
-                const MODEL_API_URL = 'https://192.168.0.33/model/models/create-from-image';
                 const response = await fetch(MODEL_API_URL, {
                     method: 'POST',
                     body: formData,
@@ -392,14 +518,7 @@ AFRAME.registerComponent('generate-model', {
                     const new_model_id = await addAsset(this.prompt, this.imageToSend, modelBlob);
                     console.log('Asset blob successfully saved.')
 
-                    const modelUrl = URL.createObjectURL(modelBlob);
-                    var new_model = document.createElement('a-entity');
-                    new_model.setAttribute('gltf-model', modelUrl);
-
-                    new_model.setAttribute('position', '5 0.5 -5');
-                    new_model.setAttribute('class', 'grabbable clickable');
-                    new_model.setAttribute('model-entity', '');
-                    el.sceneEl.appendChild(new_model);
+                    await addToScene(new_model_id);
 
                     const model_card = document.getElementById('model-card-template');
                     const new_card = model_card.cloneNode(true);
@@ -435,6 +554,8 @@ AFRAME.registerComponent('generate-model', {
                 }
 
                 loadingEl.setAttribute('visible', 'false');
+                document.getElementById('error').setAttribute('value', '');
+                document.getElementById('error').setAttribute('visible', 'false');
 
             } catch (error) {
                 console.error('Error sending image to model API:', error);
@@ -447,10 +568,124 @@ AFRAME.registerComponent('generate-model', {
     }
 });
 
-function removeModel() {
-    const selectedModelID = document.body.dataset.selectedElementId;
-    const selectedModelEl = document.getElementById(selectedModelID);
-    selectedModelEl.remove();
-    const desktopUi = document.getElementsByClassName('desktop-model-interaction');
-    desktopUi[0].style.display = 'none';
-}
+AFRAME.registerComponent('card-controls', {
+    // This component handles the in-VR model cards,
+    // including adding, downloading, and deleting.
+    init: function () {
+        const el = this.el;
+        const background = el.getElementsByClassName('card-base')[0];
+        console.log(background);
+        const originalColor = background.getAttribute('color');
+        const hoverColor = 'powderblue'; // A slightly different shade for hover
+        const overlay = el.getElementsByClassName('af-card-overlay')[0];
+        const addButton = overlay.getElementsByClassName('af-add-to-scene')[0];
+        const downloadButton = overlay.getElementsByClassName('af-download')[0];
+        const deleteButton = overlay.getElementsByClassName('af-delete')[0];
+        const deleteQuery = el.getElementsByClassName('af-delete-query')[0];
+        const confirmDelete = el.getElementsByClassName('af-confirm-delete')[0];
+        const cancelDelete = el.getElementsByClassName('af-cancel-delete')[0];
+
+        const assetId = parseInt(el.getAttribute('model-id'));
+
+        // --- 1. Hover Effect ---
+        el.addEventListener('mouseenter', () => {
+            // Make the background slightly brighter on hover
+            background.setAttribute('color', hoverColor);
+        });
+
+        el.addEventListener('mouseleave', () => {
+            // Change the color back when the cursor leaves
+            background.setAttribute('color', originalColor);
+        });
+
+        // --- 2. Click Logic ---
+        el.addEventListener('click', (event) => {
+
+
+            if (overlay.getAttribute('visible')) {
+                overlay.setAttribute('opacity', '0');
+                overlay.setAttribute('visible', 'false');
+                overlay.classList.remove('clickable');
+
+                addButton.classList.remove('clickable');
+                downloadButton.classList.remove('clickable');
+                deleteButton.classList.remove('clickable');
+            } else {
+                overlay.setAttribute('opacity', '0.5');
+                overlay.setAttribute('visible', 'true');
+                overlay.classList.add('clickable');
+
+                addButton.classList.add('clickable');
+                downloadButton.classList.add('clickable');
+                deleteButton.classList.add('clickable');
+
+                addButton.addEventListener('mouseenter', () => {
+                    addButton.setAttribute('color', hoverColor);
+                });
+                addButton.addEventListener('mouseleave', () => {
+                    addButton.setAttribute('color', originalColor);
+                });
+                addButton.addEventListener('click', async (event) => {
+                    event.stopPropagation();
+                    await addToScene(assetId);
+                });
+
+                downloadButton.addEventListener('mouseenter', () => {
+                    downloadButton.setAttribute('color', hoverColor);
+                });
+                downloadButton.addEventListener('mouseleave', () => {
+                    downloadButton.setAttribute('color', originalColor);
+                });
+                downloadButton.addEventListener('click', async (event) => {
+                    event.stopPropagation();
+                    await downloadModel(assetId);
+                });
+
+                deleteButton.addEventListener('mouseenter', () => {
+                    deleteButton.setAttribute('color', 'tomato');
+                });
+                deleteButton.addEventListener('mouseleave', () => {
+                    deleteButton.setAttribute('color', 'salmon');
+                });
+                deleteButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    
+                    addButton.setAttribute('visible', 'false');
+                    addButton.classList.remove('clickable');
+                    downloadButton.setAttribute('visible', 'false');
+                    downloadButton.classList.remove('clickable');
+                    deleteButton.setAttribute('visible', 'false');
+                    deleteButton.classList.remove('clickable');
+
+                    deleteQuery.setAttribute('visible', 'true');
+                    confirmDelete.classList.add('clickable');
+                    cancelDelete.classList.add('clickable');
+                });
+
+                cancelDelete.addEventListener('mouseenter', () => {
+                    cancelDelete.setAttribute('color', hoverColor);
+                });
+                cancelDelete.addEventListener('mouseleave', () => {
+                    cancelDelete.setAttribute('color', originalColor);
+                });
+                cancelDelete.addEventListener('click', async (event) => {
+                    event.stopPropagation();
+                    
+                    addButton.setAttribute('visible', 'true');
+                    addButton.classList.add('clickable');
+                    downloadButton.setAttribute('visible', 'true');
+                    downloadButton.classList.add('clickable');
+                    deleteButton.setAttribute('visible', 'true');
+                    deleteButton.classList.add('clickable');
+
+                    deleteQuery.setAttribute('visible', 'false');
+                    confirmDelete.classList.remove('clickable');
+                    cancelDelete.classList.remove('clickable');
+                });
+            }
+            console.log('Card clicked!', el.id);
+
+
+        });
+    }
+});

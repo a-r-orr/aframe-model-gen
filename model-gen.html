@@ -8,6 +8,7 @@
     src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-thumbstick-states@0.1.0/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-laser-manipulation@0.3.0/dist/laser-manipulation.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-mouse-manipulation@0.3.0/dist/mouse-manipulation.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.6.0/dist/aframe-extras.min.js"></script>
   <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
   <script src="../super-keyboard/aframe-super-keyboard.min.js"></script>
@@ -18,7 +19,7 @@
 </head>
 
 <body>
-  <a-scene background="color: #ECECEC" load-model-library webxr="overlayElement:#dom-overlay;">
+  <a-scene background="color: #ECECEC" load-model-library scene-setup>
 
     <a-assets>
       <!-- <a-asset-item id="stag" src="../Video13-Assets/stag.glb"></a-asset-item>
@@ -54,8 +55,8 @@
                             castShadow: true;" position="0 1.6 0">
       </a-entity>
 
-      <a-entity id="mouseCursor" cursor="rayOrigin: mouse" raycaster="objects: .clickable, .grabbable"
-        mouse-manipulation>
+      <a-entity id="mouseCursor" cursor="rayOrigin: mouse" raycaster="objects: .clickable, .grabbable">
+        <!-- mouse-manipulation="enabled: false;"> -->
       </a-entity>
 
       <!-- Controllers -->
@@ -70,26 +71,14 @@
                                             tgBindings:rotating-x-plus,rotating-x-minus,rotating-y-plus,rotating-y-minus"
         meta-touch-controls="hand: right">
         <!-- Model Library attached to controller html="html: #VR-library; cursor: #mouseCursor"-->
-        <a-entity 
-                  position="0.6 0.1 0"
-                  rotation="-90 0 0">
-          <div id="VR-library">
-            <section class="library-interface">
-              <h2>Model Library</h2>
-              <div class="library-scroller">
-                
-              </div>
-            </section>
-          </div>
+        <a-entity position="0.6 0.1 0" rotation="-90 0 0">
         </a-entity>
       </a-entity>
 
 
     </a-entity>
 
-
-
-    <!-- In-Environment Menu -->
+    <!-- Image and Model Generation Menu -->
     <a-box id="menu-background" position="0 2.5 -5" colour="#555555" scale="5 5 0.1">
       <a-box id="image-box" position="-0.3 -0.3 0.1" scale="0.25 0.25 1" color="#00AA66" class="clickable"
         generate-image>
@@ -100,8 +89,10 @@
         generate-model>
         <a-text value="Create Model" align="center" position="0 0 0.51" width="2" color="black"></a-text>
       </a-box>
-      
-      <a-image id="loading-image" position="0 0.25 1.01" scale="0.15 0.15 1" src="#update" visible="false" material="transparent: true; alphaTest: 0.8;" animation="property: rotation; to: 0 0 360; loop: true; dur: 3000; easing: linear;"></a-image>
+
+      <a-image id="loading-image" position="0 0.25 1.01" scale="0.15 0.15 1" src="#update" visible="false"
+        material="transparent: true; alphaTest: 0.8;"
+        animation="property: rotation; to: 0 0 360; loop: true; dur: 3000; easing: linear;"></a-image>
       <a-image id="image" position="0 0.25 1" scale="0.33 0.33 1" src="#" visible="false"></a-image>
 
       <a-text id="instruction" value="Type your prompt:" align="center" position="0 0.05 1" scale="0.2 0.2 1"
@@ -115,19 +106,152 @@
     <a-entity id="keyboard" super-keyboard="hand: #mouseCursor; imagePath:../super-keyboard/; multipleInputs: true;"
       position="0 0.7 -4.5" rotation="-30 0 0">
     </a-entity>
-    <!-- <a-image id="loading-image" position="0 3.75 -4.89" scale="0.5 0.5 1" src="#update" visible="true" animation="property: rotation; to: 0 0 360; loop: true; dur: 3000; easing: linear;"></a-image> -->
+
+    <a-entity class="native-card" 
+              position="0 1 -2"
+              scale="0.5 0.5 0.5"
+              model-id="3"
+              card-controls>
+
+      <a-plane width="2" 
+               height="2.8"
+               color="azure"
+               side="double"
+               class="clickable card-base"
+               >
+      </a-plane>
+
+      <a-image src="temp.png"
+              width="1.8" height="1.8"
+              position="0 -0.35 0.01"> </a-image>
+
+      <a-text value="A cat wearing a wizard hat"
+              color="#333"
+              align="center"
+              width="1.8"
+              wrap-count="25" position="0 0.85 0.01">
+      </a-text>
+
+      <a-plane class="af-card-overlay"
+               width="2" 
+               height="2.8"
+               position="0 0 0.05"
+               color="#AAAAAA"
+               opacity="0"
+               visible="false"
+               side="double"
+               >
+
+        <!-- Add to Scene Button -->
+        <a-box width="1"
+               height="0.4"
+               depth="0.05"
+               color="azure"
+               position="0 0.7 0"
+               class="af-add-to-scene"
+               >
+          <a-text value="Add to Scene"
+                  color="#333"
+                  position="0 0 0.05"
+                  width="0.9"
+                  align="center"
+                  wrap-count="10">
+          </a-text>
+        </a-box>
+
+        <!-- Download Button -->
+        <a-box width="1"
+               height="0.4"
+               depth="0.05"
+               color="azure"
+               position="0 0 0"
+               class="af-download"
+               >
+          <a-text value="Download"
+                  color="#333"
+                  position="0 0 0.05"
+                  width="0.9"
+                  align="center"
+                  wrap-count="10">
+          </a-text>
+        </a-box>
+
+        <!-- Delete Asset Button -->
+        <a-box width="1"
+               height="0.4"
+               depth="0.05"
+               color="salmon"
+               position="0 -0.7 0"
+               class="af-delete"
+               >
+          <a-text value="Delete Asset"
+                  color="#333"
+                  position="0 0 0.05"
+                  width="0.9"
+                  align="center"
+                  wrap-count="10">
+          </a-text>
+        </a-box>
+
+        <a-entity class="af-delete-query"
+                  visible="false">
+          <a-text value="Really Delete?"
+                  color="#333"
+                  position="0 0.5 0.05"
+                  width="1.2"
+                  align="center"
+                  wrap-count="10">
+          </a-text>
+          <a-box width="1"
+               height="0.4"
+               depth="0.05"
+               color="salmon"
+               position="0 -0.7 0"
+               class="af-confirm-delete"
+               >
+            <a-text value="Delete"
+                    color="#333"
+                    position="0 0 0.05"
+                    width="0.9"
+                    align="center"
+                    wrap-count="10">
+            </a-text>
+          </a-box>
+          <a-box width="1"
+                height="0.4"
+                depth="0.05"
+                color="azure"
+                position="0 0 0"
+                class="af-cancel-delete"
+                >
+            <a-text value="Cancel"
+                    color="#333"
+                    position="0 0 0.05"
+                    width="0.9"
+                    align="center"
+                    wrap-count="10">
+            </a-text>
+          </a-box>
+        </a-entity>
+
+      </a-plane>
+
+    </a-entity>
 
   </a-scene>
 
   <div id="desktop-ui">
     <section class="browser-prompt-entry">
-    
-      <h2>Type Your Prompt Here</h2>
-      <form id="desktop-prompt-form">
-        <input type="text" id="desktop-prompt-input" placeholder="Prompt...">
-        <button type="submit">Submit</button>
-      </form>
 
+      <h2>Inputs</h2>
+      <!-- Text Prompt entry -->
+      <form id="desktop-prompt-form">
+        <input type="text" id="desktop-prompt-input" placeholder="Text Prompt...">
+        <button type="submit">Submit Text</button>
+      </form>
+      <!-- Image Upload -->
+      <label for="image-upload-input" class="image-upload-button">Upload Image</label>
+      <input type="file" id="image-upload-input" accept="image/*" hidden>
     </section>
 
     <section class="desktop-model-interaction">
@@ -148,17 +272,33 @@
     <section class="library-interface">
       <h2>Model Library</h2>
       <div class="library-scroller">
-        
-        
+
+
       </div>
     </section>
   </div>
 
+  <div id="desktop-warning">
+    <p>On non-VR devices: use WASD keys to move and mouse to look & interact</p>
+  </div>
+
   <div id="vr-ui-source">
-    <section class="desktop-model-interaction">
-      <h2>Change Size</h2>
-      <fieldset id="custom-size-input-vr" data-value="1" data-min="0.25" data-max="5" data-step="0.25"
-        style="border-radius: 1em;">
+    <section class="browser-prompt-entry">
+
+      <h2>Inputs</h2>
+      <!-- Text Prompt entry -->
+      <form id="desktop-prompt-form">
+        <input type="text" id="desktop-prompt-input" placeholder="Text Prompt...">
+        <button type="submit">Submit Text</button>
+      </form>
+      <!-- Image Upload -->
+      <label for="image-upload-input" class="image-upload-button">Upload Image</label>
+      <input type="file" id="image-upload-input" accept="image/*" hidden>
+    </section>
+
+    <section class="desktop-model-interaction" id="vr-model-settings">
+      <h2 id="desktop-model-name">Model</h2>
+      <fieldset id="custom-size-input-desktop" data-value="1" data-min="0.25" data-max="5" data-step="0.25">
         <legend>Scale:</legend>
         <div class="size-input">
           <button onclick="updateSize(-1)">-</button>
@@ -166,18 +306,38 @@
           <button onclick="updateSize(1)">+</button>
         </div>
       </fieldset>
+      <div class="model-buttons">
+        <button onclick="removeModel()">Remove</button>
+      </div>
+    </section>
+
+    <section class="library-interface" id="vr-library">
+      <h2>Model Library</h2>
+      <div class="library-scroller">
+
+
+      </div>
     </section>
   </div>
 
-  
-
-  <div class="model-card" id="model-card-template">
+  <!-- Template Card for Model Library -->
+  <div class="model-card clickable" id="model-card-template">
     <h3 class="model-name"></h3>
     <img class="model-image" src="#" alt="">
 
     <div class="card-overlay">
-      <button class="card-button" data-action="add">Add to Scene</button>
-      <button class="card-button" data-action="delete">Delete Asset</button>
+      <div class="card-actions">
+        <button class="card-button clickable" data-action="add">Add to Scene</button>
+        <button class="card-button clickable" data-action="download">Download</button>
+        <button class="card-button clickable" data-action="delete">Delete Asset</button>
+      </div>
+      <div class="card-confirmation">
+        <p>Are you sure?</p>
+        <div class="confirmation-buttons">
+          <button class="card-button clickable" data-action="confirm-delete">Yes</button>
+          <button class="card-button clickable" data-action="cancel-delete">No</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -197,32 +357,17 @@
           imagePath: '../super-keyboard/',
           multipleInputs: 'true'
         });
-
-        // super-keyboard="hand: #mouseCursor; imagePath:../super-keyboard/; multipleInputs: true;"
-
-        //vrButton.classList.remove('hidden');
       } else {
         // If not supported
         console.log("VR is not supported on this device.");
+        const warning = document.getElementById('desktop-warning');
+        warning.style.display = 'flex';
+        document.getElementById('keyboard').remove();
+        const sceneEl = document.getElementsByTagName('a-scene')[0];
+        sceneEl.setAttribute('xr-mode-ui', 'enabled: false;');
       }
 
-      document.getElementById('desktop-prompt-form').addEventListener('submit', function(event) {
-        // Prevent the form from reloading the page
-        event.preventDefault(); 
-        
-        const input = document.getElementById('desktop-prompt-input');
-        const promptValue = input.value;
 
-        if (promptValue) {
-          console.log("Desktop Prompt Submitted:", promptValue);
-          
-          // Set the prompt value on the in-world text entity
-          document.getElementById('prompt').setAttribute('value', promptValue);
-
-          // Optionally, clear the input field after submission
-          input.value = ''; 
-        }
-      });
 
     });
 

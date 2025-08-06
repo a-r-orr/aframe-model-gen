@@ -155,3 +155,26 @@ function getAllAssets() {
         };
     });
 }
+
+
+function deleteAsset(id) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            return reject('Database not initialised. Call initDB() first.');
+        }
+
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const objectStore = transaction.objectStore(STORE_NAME);
+
+        const request = objectStore.delete(id);
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+            console.error('Error deleting asset: ', event.target.error);
+            reject('Error deleting asset');
+        };
+    });
+}
