@@ -41,7 +41,7 @@ function initDB() {
 function addAsset(prompt, imageBlob, modelBlob) {
     return new Promise((resolve, reject) => {
         if (!db) {
-            return reject('Database not initialised. Call initDB() first.');
+            return reject(new Error('Database not initialised. Call initDB() first.'));
         }
 
         const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -78,7 +78,7 @@ function addAsset(prompt, imageBlob, modelBlob) {
 function updateModelScale(id, newScale) {
     return new Promise((resolve, reject) => {
         if (!db) {
-            return reject('Database not initialised. Call initDB() first.');
+            return reject(new Error('Database not initialised. Call initDB() first.'));
         }
 
         const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -89,6 +89,9 @@ function updateModelScale(id, newScale) {
 
         getRequest.onsuccess = (event) => {
             const asset = getRequest.result;
+            if (asset == undefined) {
+                return reject(new Error('Asset does not exist.'));
+            }
             console.log(`Asset retrieved for ID ${id} `, asset);
             asset.scale = newScale;
 
@@ -102,12 +105,11 @@ function updateModelScale(id, newScale) {
             updateAssetRequest.onerror = (event2) => {
                 console.error('Error updating asset scale: ', event2.target.error);
             };
-
         };
 
         getRequest.onerror = (event) => {
             console.error('Error retrieving asset: ', event.target.error);
-            reject('Error retrieving asset');
+            reject(new Error('Error retrieving asset'));
         };
     });
 }
@@ -115,7 +117,7 @@ function updateModelScale(id, newScale) {
 function getAsset(id) {
     return new Promise((resolve, reject) => {
         if (!db) {
-            return reject('Database not initialised. Call initDB() first.');
+            return reject(new Error('Database not initialised. Call initDB() first.'));
         }
 
         const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -137,7 +139,7 @@ function getAsset(id) {
 function getAllAssets() {
     return new Promise((resolve, reject) => {
         if (!db) {
-            return reject('Database not initialised. Call initDB() first.');
+            return reject(new Error('Database not initialised. Call initDB() first.'));
         }
 
         const transaction = db.transaction([STORE_NAME], 'readonly');
@@ -160,7 +162,7 @@ function getAllAssets() {
 function deleteAsset(id) {
     return new Promise((resolve, reject) => {
         if (!db) {
-            return reject('Database not initialised. Call initDB() first.');
+            return reject(new Error('Database not initialised. Call initDB() first.'));
         }
 
         const transaction = db.transaction([STORE_NAME], 'readwrite');

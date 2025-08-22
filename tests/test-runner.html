@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project Test Suite</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mocha/9.2.2/mocha.min.css">
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+</head>
+<body>
+    <a-scene embedded style="display: none;"></a-scene>
+    
+    <div id="mocha"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/9.2.2/mocha.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chai/4.3.6/chai.min.js"></script>
+    
+    <script class="mocha-init">
+        var expect = chai.expect;
+        
+        mocha.setup('bdd');
+    </script>
+    
+    <script src="../js/db.js"></script>
+    <script src="../js/utils.js"></script>
+    
+    <script src="./db.test.js"></script>
+    <script src="./utils.test.js"></script>
+    <script src="./integration.test.js"></script> 
+    
+    <script class="mocha-run">
+        mocha.run();
+    </script>
+</body>
+</html>

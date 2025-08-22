@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // If not supported
         console.log("VR is not supported on this device.");
         const warning = document.getElementById('desktop-warning');
-        warning.style.display = 'flex';
+        if (warning) {
+            warning.style.display = 'flex';
+        }
         document.getElementById('keyboard').remove();
         const sceneEl = document.getElementsByTagName('a-scene')[0];
         sceneEl.setAttribute('xr-mode-ui', 'enabled: false;');
@@ -112,7 +114,9 @@ function removeModel() {
     const selectedModelEl = document.getElementById(selectedModelID);
     selectedModelEl.remove();
     const desktopUi = document.getElementsByClassName('desktop-model-interaction');
-    desktopUi[0].style.display = 'none';
+    if (desktopUi.length > 0) {
+        desktopUi[0].style.display = 'none';
+    }
 }
 
 async function handleRange(detail) {

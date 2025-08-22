@@ -1,59 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-Frame Test Environments</title>
+    <title>Model Generation Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        /* --- Basic Reset & Body Styling --- */
+        html {
+            box-sizing: border-box;
+        }
+
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
+
         body {
-            font-family: sans-serif;
-            background-color: #f0f0f0;
-            color: #333;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
-            padding: 20px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Dark gradient background */
+            background-color: #1a1a2e;
+            background-image: radial-gradient(circle at top right, #1f4287, #1a1a2e 70%);
+            color: #e0e0e0;
         }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 1rem 0;
+
+        /* --- Main Content Container --- */
+        .container {
             text-align: center;
+            padding: 3rem 4rem;
+            background-color: rgba(23, 23, 39, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
+
+        /* --- Typography --- */
         h1 {
-            margin: 0;
+            margin: 0 0 1.5rem 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 1px;
         }
-        ul {
-            list-style-type: none;
-            padding: 0;
+
+        p {
+            margin: 0 0 1.5rem 0;
         }
-        li {
-            background-color: #fff;
-            margin: 10px 0;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        a {
+
+        /* --- The "Enter" Button --- */
+        .enter-button {
+            display: inline-block;
             text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 1.1rem;
+            background-color: #007bff;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            transition: transform 0.2s ease-out, background-color 0.2s ease-out;
         }
-        a:hover {
-            text-decoration: underline;
+
+        .enter-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-3px);
+            /* Lifts the button slightly */
         }
     </style>
 </head>
+
 <body>
 
-    <header>
-        <h1>Model Generation</h1>
-    </header>
-
-    <main>
-        <h2>Enter Project</h2>
-        <ul>
-            <li><a href="model-gen.html">Click Here</a></li>
-        </ul>
-    </main>
+    <div class="container">
+        <h1>Model Generation Environment</h1>
+        <p>Create 3D assets from text or image prompts.</p>
+        <p>This project was created for the Software Development MSc at Queen's University Belfast.</p>
+        <a href="model-gen.html" class="enter-button">Enter Project</a>
+    </div>
 
 </body>
+
 </html>
