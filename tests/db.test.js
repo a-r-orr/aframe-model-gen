@@ -2,7 +2,7 @@
 describe('db.js - DB not initialised', function() {
     this.timeout(5000);
 
-    it('should reject addAsset() when DB not initialised with error message', async function() {
+    it('should reject addAsset() with error message', async function() {
         try {
             await addAsset('test', null, null);
             // If getAsset() succeeds, fail test
@@ -14,7 +14,7 @@ describe('db.js - DB not initialised', function() {
         }
     });
 
-    it('should reject updateModelScale() when DB not initialised with error message', async function() {
+    it('should reject updateModelScale() with error message', async function() {
         try {
             await updateModelScale(1, 2);
             // If getAsset() succeeds, fail test
@@ -26,7 +26,7 @@ describe('db.js - DB not initialised', function() {
         }
     });
 
-    it('should reject getAsset() when DB not initialised with error message', async function() {
+    it('should reject getAsset() with error message', async function() {
         try {
             await getAsset(1);
             // If getAsset() succeeds, fail test
@@ -38,7 +38,7 @@ describe('db.js - DB not initialised', function() {
         }
     });
 
-    it('should reject getAllAssets() when DB not initialised with error message', async function() {
+    it('should reject getAllAssets() with error message', async function() {
         try {
             await getAllAssets();
             // If getAsset() succeeds, fail test
@@ -50,7 +50,7 @@ describe('db.js - DB not initialised', function() {
         }
     });
 
-    it('should reject deleteAsset() when DB not initialised with error message', async function() {
+    it('should reject deleteAsset() with error message', async function() {
         try {
             await deleteAsset(-1);
             // If getAsset() succeeds, fail test
