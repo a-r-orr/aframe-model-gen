@@ -191,19 +191,14 @@
         </a-box>
       </a-entity>
 
-      <a-asset-item id="buildings" src="./assets/models/ccity_building_set_1.glb"></a-asset-item>
-      <a-asset-item id="oldtown" src="./assets/models/old_town.glb"></a-asset-item>
       <a-asset-item id="warehouse" src="./assets/models/warehouse_building.glb"></a-asset-item>
 
       <a-asset-item id="sky" src="./assets/models/shanghai_bund_4k.hdr" response-type="arraybuffer"></a-asset-item>
     </a-assets>
 
     <!-- Lighting -->
-
     <a-entity light="type: ambient; intensity: 0.5"></a-entity>
-
-    <a-entity
-      light="type: directional;
+    <a-entity light="type: directional;
             castShadow: true;
             intensity: 0.8;
             shadowMapHeight: 2048;
@@ -216,9 +211,7 @@
             shadowCameraFar: 1000;"
       position="-100 100 50">
     </a-entity>
-
-    <a-entity
-      light="type: directional;
+    <a-entity light="type: directional;
             intensity: 0.6;
             castShadow: false;"
       position="100 50 -50">
@@ -226,21 +219,6 @@
 
     <!-- Environment -->
     <a-plane rotation="-90 0 0" scale="200 200 1" color="#777"></a-plane>
-    
-
-    <!-- <a-gltf-model src="#buildings"
-                  position="50 0.01 22"
-                  scale="1 1 1"
-                  shadow="cast: true; receive: true;">
-    </a-gltf-model> -->
-
-    <!-- <a-gltf-model src="#oldtown"
-                  position="-45 1.5 20"
-                  rotation="0 0 0"
-                  scale="50 50 50"
-                  shadow="cast: true; receive: true;">
-    </a-gltf-model> -->
-
     <a-gltf-model src="#warehouse"
                   position="3 0 11.5"
                   rotation="0 90 0"
@@ -302,11 +280,13 @@
       position="0 0.7 -4.5" rotation="-30 0 0">
     </a-entity>
 
+    <!-- "Plinth" where models are located -->
     <a-cylinder position="3 0.1 -3"
                 height="0.2"
                 radius="0.5">
     </a-cylinder>
 
+    <!-- VR model library -->
     <a-entity id="vr-library-container"
               position="-5.5 1.5 -4.9">
       <a-plane color="#CCC"
