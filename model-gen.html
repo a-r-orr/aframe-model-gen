@@ -4,7 +4,6 @@
 <head>
   <script src="https://unpkg.com/cannon@0.6.2/build/cannon.min.js"></script>
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-thumbstick-states@0.1.0/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-laser-manipulation@0.3.0/dist/laser-manipulation.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-mouse-manipulation@0.3.0/dist/mouse-manipulation.min.js"></script>
@@ -18,6 +17,7 @@
 </head>
 
 <body>
+  <!-- The A-Frame Scene -->
   <a-scene background="color: #ECECEC" load-model-library scene-setup
             renderer="colorManagement: true;
                       physicallyCorrectLights: true;
@@ -192,6 +192,8 @@
       </a-entity>
 
       <a-asset-item id="buildings" src="./assets/models/ccity_building_set_1.glb"></a-asset-item>
+      <a-asset-item id="oldtown" src="./assets/models/old_town.glb"></a-asset-item>
+      <a-asset-item id="warehouse" src="./assets/models/warehouse_building.glb"></a-asset-item>
 
       <a-asset-item id="sky" src="./assets/models/shanghai_bund_4k.hdr" response-type="arraybuffer"></a-asset-item>
     </a-assets>
@@ -224,10 +226,25 @@
 
     <!-- Environment -->
     <a-plane rotation="-90 0 0" scale="200 200 1" color="#777"></a-plane>
+    
 
-    <a-gltf-model src="#buildings"
+    <!-- <a-gltf-model src="#buildings"
                   position="50 0.01 22"
                   scale="1 1 1"
+                  shadow="cast: true; receive: true;">
+    </a-gltf-model> -->
+
+    <!-- <a-gltf-model src="#oldtown"
+                  position="-45 1.5 20"
+                  rotation="0 0 0"
+                  scale="50 50 50"
+                  shadow="cast: true; receive: true;">
+    </a-gltf-model> -->
+
+    <a-gltf-model src="#warehouse"
+                  position="3 0 11.5"
+                  rotation="0 90 0"
+                  scale="2 2 2"
                   shadow="cast: true; receive: true;">
     </a-gltf-model>
 
@@ -263,7 +280,7 @@
         <a-text id="message" value="Generate Image" align="center" position="0 0 0.51" width="2" color="black"></a-text>
       </a-box>
 
-      <a-box id="model-box" position="0.3 -0.3 0.1" scale="0.25 0.25 1" color="#AA0066" class="clickable"
+      <a-box id="model-box" position="0.3 -0.3 0.1" scale="0.25 0.25 1" color="#CC3333" class="clickable"
         generate-model>
         <a-text value="Create Model" align="center" position="0 0 0.51" width="2" color="black"></a-text>
       </a-box>
@@ -278,15 +295,20 @@
 
       <a-text id="prompt" value="Prompt" align="center" position="0 -0.05 1" scale="0.3 0.3 1" color="black"></a-text>
 
-      <a-text id="error" visible="false" value="Error Message" align="center" position="0 -0.15 1" scale="0.2 0.2 1"
-        color="black"></a-text>
+      <a-text id="error" visible="false" value="Error Message" align="center" position="0 -0.13 1" scale="0.2 0.2 1"
+        color="red"></a-text>
     </a-box>
     <a-entity id="keyboard" super-keyboard="hand: #mouseCursor; imagePath:./lib/super-keyboard/; multipleInputs: true;"
       position="0 0.7 -4.5" rotation="-30 0 0">
     </a-entity>
 
+    <a-cylinder position="3 0.1 -3"
+                height="0.2"
+                radius="0.5">
+    </a-cylinder>
+
     <a-entity id="vr-library-container"
-              position="-5.5 1.5 -5">
+              position="-5.5 1.5 -4.9">
       <a-plane color="#CCC"
                side="double"
                width="5.5"
@@ -312,6 +334,7 @@
     </a-entity>
   </a-scene>
 
+  <!-- The Desktop UI including the model library -->
   <div id="desktop-ui">
     <section class="browser-prompt-entry">
 
@@ -350,7 +373,8 @@
     </section>
   </div>
 
-  <div id="desktop-warning">
+  <!-- Advice message to display on non-VR devices -->
+  <div id="desktop-advice">
     <p>On non-VR devices: use WASD keys to move and mouse to look & interact</p>
   </div>
 

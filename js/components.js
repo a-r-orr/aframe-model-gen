@@ -8,6 +8,11 @@ AFRAME.registerComponent('scene-setup', {
     init: function () {
         console.log('Scene setup component initialized.');
         const sceneEl = this.el;
+        // Deactivate the "Generate Model" button
+        const modelBox = document.getElementById('model-box');
+        modelBox.removeAttribute('generate-model');
+        modelBox.setAttribute('color', '#999'); // Set a "disabled" color
+        modelBox.classList.remove('clickable');
 
         document.getElementById('desktop-prompt-form').addEventListener('submit', function (event) {
             // Prevent the form from reloading the page
@@ -29,8 +34,20 @@ AFRAME.registerComponent('scene-setup', {
                 document.getElementById('error').setAttribute('value', '');
                 document.getElementById('error').setAttribute('visible', 'false');
 
-                // Optionally, clear the input field after submission
+                // Clear the input field after submission
                 input.value = '';
+
+                // Reactivate the "Generate Image" button
+                const imageBox = document.getElementById('image-box');
+                imageBox.setAttribute('generate-image', '');
+                imageBox.setAttribute('color', '#00AA66'); // Restore original color
+                imageBox.classList.add('clickable');
+
+                // Deactivate the "Generate Model" button
+                const modelBox = document.getElementById('model-box');
+                modelBox.removeAttribute('generate-model');
+                modelBox.setAttribute('color', '#999'); // Set a "disabled" color
+                modelBox.classList.remove('clickable');
             }
         });
 
@@ -73,6 +90,12 @@ AFRAME.registerComponent('scene-setup', {
             const loadingEl = document.getElementById('loading-image');
             loadingEl.setAttribute('visible', 'false');
 
+            // Reactivate the "Generate Model" button
+            const modelBox = document.getElementById('model-box');
+            modelBox.setAttribute('generate-model', '');
+            modelBox.setAttribute('color', '#FFC42E'); // Restore original color
+            modelBox.classList.add('clickable');
+
             // Emit the 'image-ready' event with the new prompt and the stored blob
             sceneEl.emit('image-ready', {
                 prompt: userPrompt,
@@ -104,6 +127,14 @@ AFRAME.registerComponent('scene-setup', {
             imageLabelForm.reset();
             imageUploadInput.value = ''; // Important: reset file input
             uploadedFile = null;
+
+            // Deactivate the "Generate Image" button
+            const imageBox = document.getElementById('image-box');
+            imageBox.removeAttribute('generate-image');
+            imageBox.setAttribute('color', '#999'); // Set a "disabled" color
+            imageBox.classList.remove('clickable');
+
+            
         });
 
         // This listener handles the "Cancel" button
@@ -340,8 +371,7 @@ AFRAME.registerComponent('model-entity', {
         if (el.getAttribute('model-scale') && el.getAttribute('model-scale') !== "undefined") {
             const scale = parseFloat(el.getAttribute('model-scale'));
             el.setAttribute('scale', `${scale} ${scale} ${scale}`);
-            el.object3D.position.y = scale / 2;
-
+            el.object3D.position.y = scale / 2 + 0.2;
         }
 
         // Add an event listener to wait for the model to finish loading
@@ -493,7 +523,8 @@ AFRAME.registerComponent('generate-image', {
         const mouseCursor = document.getElementById('mouseCursor');
         var data = this.data;
         var el = this.el;
-        var defaultColor = el.getAttribute('material').color;
+        // var defaultColor = el.getAttribute('material').color;
+        var defaultColor = '#00AA66';
 
         const prompt = document.getElementById('prompt').getAttribute('value');
         console.log(prompt);
@@ -525,6 +556,12 @@ AFRAME.registerComponent('generate-image', {
                 if (!response.ok) throw new Error(`Image API request failed`);
 
                 const imageBlob = await response.blob();
+
+                // Reactivate the "Generate Model" button
+                const modelBox = document.getElementById('model-box');
+                modelBox.setAttribute('generate-model', '');
+                modelBox.setAttribute('color', '#FFC42E'); // Restore original color
+                modelBox.classList.add('clickable');
 
                 // Emit a scene-wide event with the blob data
                 console.log("Image generated. Emitting 'image-ready' event.");
@@ -563,7 +600,8 @@ AFRAME.registerComponent('generate-model', {
         const el = this.el;
         const sceneEl = this.el.sceneEl;
         var data = this.data;
-        var defaultColor = el.getAttribute('material').color;
+        // var defaultColor = el.getAttribute('material').color;
+        var defaultColor = '#FFC42E';
 
         el.addEventListener('mouseenter', function () {
             el.setAttribute('color', data.color);

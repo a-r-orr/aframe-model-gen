@@ -58,25 +58,119 @@
             margin: 0 0 1.5rem 0;
         }
 
-        /* --- The "Enter" Button --- */
-        .enter-button {
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        /* --- Buttons --- */
+        .btn {
             display: inline-block;
             text-decoration: none;
             color: #ffffff;
             font-weight: 600;
             font-size: 1.1rem;
-            background-color: #007bff;
             padding: 1rem 2.5rem;
             border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s ease-out, background-color 0.2s ease-out;
+            border: none;
+            cursor: pointer;
         }
 
-        .enter-button:hover {
-            background-color: #0056b3;
+        .btn-primary {
+            background-color: #007bff;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn:hover {
             transform: translateY(-3px);
             /* Lifts the button slightly */
         }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* --- Modal Styling --- */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: #1a1a2e;
+            margin: 5px auto auto auto;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 80%;
+            max-width: 600px;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .modal-content h2 {
+            margin-top: 0;
+            color: #ffffff;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            width: 300px;
+            display: block;
+            margin: 0 auto 10px auto;
+            
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from {opacity: 0}
+            to {opacity: 1}
+        }
+
+        @keyframes slideIn {
+            from {transform: translateY(-50px); opacity: 0}
+            to {transform: translateY(0); opacity: 1}
+        }
+
     </style>
 </head>
 
@@ -86,8 +180,59 @@
         <h1>Model Generation Environment</h1>
         <p>Create 3D assets from text or image prompts.</p>
         <p>This project was created for the Software Development MSc at Queen's University Belfast.</p>
-        <a href="model-gen.html" class="enter-button">Enter Project</a>
+        <div class="button-container">
+            <a href="model-gen.html" class="btn btn-primary">Enter Project</a>
+            <button id="howToUseBtn" class="btn btn-secondary">Info</button>
+        </div>
     </div>
+
+    <!-- The How to Use Modal -->
+    <div id="howToUseModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Interacting with Models</h2>
+            <p>If you are using a mouse & keyboard, the WASD keys will move the camera around and your mouse buttons will manipulate the 3D models. When you hover over an object you will see tool tips like this:</p>
+            <img src="./assets/images/mouse-instructions.png" alt="Instructions for manipulating models with your mouse.">
+            <p>If you are using a VR headset, you will need controllers:</p>
+            <ul>
+                <li>Left Thumbstick = Move around the environment.</li>
+                <li>Right Thumbstick = Turn camera.</li>
+                <li>Left Trigger = Clicking on buttons and models.</li>
+                <li>Right Trigger = Pick up and move a model.</li>
+                <li>Right Trigger + Grip = Rotate Model</li>
+            </ul>
+            <img src="./assets/images/pico-controller.png" alt="Labelled diagram of VR Controller.">
+        </div>
+    </div>
+
+    <script>
+        // Get the modal
+        const modal = document.getElementById("howToUseModal");
+
+        // Get the button that opens the modal
+        const btn = document.getElementById("howToUseBtn");
+
+        // Get the <span> element that closes the modal
+        const span = document.getElementsByClassName("close-button")[0];
+
+        // When the user clicks the button, open the modal 
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 
 </body>
 

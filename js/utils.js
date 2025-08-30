@@ -33,6 +33,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('prompt').setAttribute('value', event.detail.value)
         document.getElementById('error').setAttribute('value', '');
         document.getElementById('error').setAttribute('visible', 'false');
+
+        // Reactivate the "Generate Image" button
+        const imageBox = document.getElementById('image-box');
+        imageBox.setAttribute('generate-image', '');
+        imageBox.setAttribute('color', '#00AA66'); // Restore original color
+        imageBox.classList.add('clickable');
     });
 });
 
@@ -157,7 +163,7 @@ async function addToScene(assetId) {
         newModel.setAttribute('id', modelId);
         newModel.setAttribute('shadow', 'receive: true');
         newModel.setAttribute('model-scale', asset.scale);
-        newModel.setAttribute('position', '4 0.5 -5'); // Or any desired position
+        newModel.setAttribute('position', '3 0.5 -3');
 
         newModel.addEventListener('model-loaded', () => {
             console.log(`Model "${asset.prompt}" has loaded, revoking URL.`);
