@@ -36,7 +36,11 @@ function initDB() {
 }
 
 /**
- * Adds assets to the database.
+ * Adds an asset to the database.
+ * @param {*} prompt - the prompt used to create the asset
+ * @param {*} imageBlob - the image blob data used to create the asset
+ * @param {*} modelBlob - the 3D asset as blob data
+ * @returns {Promise<IDBDatabase>} Promise that resolves with the new asset's ID
  */
 function addAsset(prompt, imageBlob, modelBlob) {
     return new Promise((resolve, reject) => {
@@ -71,9 +75,11 @@ function addAsset(prompt, imageBlob, modelBlob) {
     });
 }
 
-
 /**
- * Updates a model's scale in the database.
+ * Updates an asset's scale in the database.
+ * @param {*} id - the id of the asset to be updated
+ * @param {*} newScale - the new scale value to be saved
+ * @returns {Promise<IDBDatabase>} Promise that resolves when DB has been updated
  */
 function updateModelScale(id, newScale) {
     return new Promise((resolve, reject) => {
@@ -114,6 +120,11 @@ function updateModelScale(id, newScale) {
     });
 }
 
+/**
+ * Gets an asset from the database.
+ * @param id - ID of the desired asset
+ * @returns {Promise<IDBDatabase>} Promise that resolves with the asset.
+ */
 function getAsset(id) {
     return new Promise((resolve, reject) => {
         if (!db) {
@@ -136,6 +147,10 @@ function getAsset(id) {
     });
 }
 
+/**
+ * Retrieves all assets in the database.
+ * @returns {Promise<IDBDatabase>} Promise that resolves with an array containing all assets
+ */
 function getAllAssets() {
     return new Promise((resolve, reject) => {
         if (!db) {
@@ -158,7 +173,11 @@ function getAllAssets() {
     });
 }
 
-
+/**
+ * Deletes an asset from the database.
+ * @param {*} id - the id of the asset to be deleted
+ * @returns {Promise<IDBDatabase>} Promise that resolves when the asset has been deleted
+ */
 function deleteAsset(id) {
     return new Promise((resolve, reject) => {
         if (!db) {
