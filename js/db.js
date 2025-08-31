@@ -10,23 +10,22 @@ function initDB() {
     return new Promise((resolve, reject) => {
         // Open the database
         const request = indexedDB.open(DB_NAME, 1);
-
+        // If an upgrade is needed
         request.onupgradeneeded = (event) => {
             const dbInstance = event.target.result;
             console.log("Database needs upgraded");
-
+            // If the object store does not exist - set it up.
             if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
                 const objectStore = dbInstance.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-                // TODO: Add Indexes here if needed
                 console.log(`${STORE_NAME} object store created.`)
             }
         };
-
+        // If an error event is fired
         request.onerror = (event) => {
             console.error("Database Error: ", event.target.error);
             reject('Database error');
         };
-
+        // If a success event is fired
         request.onsuccess = (event) => {
             db = event.target.result;
             console.log('Database opened successfully.');
@@ -40,7 +39,7 @@ function initDB() {
  * @param {*} prompt - the prompt used to create the asset
  * @param {*} imageBlob - the image blob data used to create the asset
  * @param {*} modelBlob - the 3D asset as blob data
- * @returns {Promise<IDBDatabase>} Promise that resolves with the new asset's ID
+ * @returns {Promise} Promise that resolves with the new asset's ID
  */
 function addAsset(prompt, imageBlob, modelBlob) {
     return new Promise((resolve, reject) => {
@@ -76,10 +75,63 @@ function addAsset(prompt, imageBlob, modelBlob) {
 }
 
 /**
+ * Gets an asset from the database.
+ * @param id - ID of the desired asset
+ * @returns {Promise} Promise that resolves with the asset.
+ */
+function getAsset(id) {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            return reject(new Error('Database not initialised. Call initDB() first.'));
+        }
+
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const objectStore = transaction.objectStore(STORE_NAME);
+
+        const request = objectStore.get(id);
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+            console.error('Error getting asset: ', event.target.error);
+            reject('Error getting asset');
+        };
+    });
+}
+
+/**
+ * Retrieves all assets in the database.
+ * @returns {Promise} Promise that resolves with an array containing all assets
+ */
+function getAllAssets() {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            return reject(new Error('Database not initialised. Call initDB() first.'));
+        }
+
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const objectStore = transaction.objectStore(STORE_NAME);
+
+        const request = objectStore.getAll();
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+            console.error('Error getting assets: ', event.target.error);
+            reject('Error getting assets');
+        };
+    });
+}
+
+/**
  * Updates an asset's scale in the database.
  * @param {*} id - the id of the asset to be updated
  * @param {*} newScale - the new scale value to be saved
- * @returns {Promise<IDBDatabase>} Promise that resolves when DB has been updated
+ * @returns {Promise} Promise that resolves when DB has been updated
  */
 function updateModelScale(id, newScale) {
     return new Promise((resolve, reject) => {
@@ -121,62 +173,9 @@ function updateModelScale(id, newScale) {
 }
 
 /**
- * Gets an asset from the database.
- * @param id - ID of the desired asset
- * @returns {Promise<IDBDatabase>} Promise that resolves with the asset.
- */
-function getAsset(id) {
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            return reject(new Error('Database not initialised. Call initDB() first.'));
-        }
-
-        const transaction = db.transaction([STORE_NAME], 'readonly');
-        const objectStore = transaction.objectStore(STORE_NAME);
-
-        const request = objectStore.get(id);
-
-        request.onsuccess = (event) => {
-            resolve(event.target.result);
-        };
-
-        request.onerror = (event) => {
-            console.error('Error getting asset: ', event.target.error);
-            reject('Error getting asset');
-        };
-    });
-}
-
-/**
- * Retrieves all assets in the database.
- * @returns {Promise<IDBDatabase>} Promise that resolves with an array containing all assets
- */
-function getAllAssets() {
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            return reject(new Error('Database not initialised. Call initDB() first.'));
-        }
-
-        const transaction = db.transaction([STORE_NAME], 'readonly');
-        const objectStore = transaction.objectStore(STORE_NAME);
-
-        const request = objectStore.getAll();
-
-        request.onsuccess = (event) => {
-            resolve(event.target.result);
-        };
-
-        request.onerror = (event) => {
-            console.error('Error getting assets: ', event.target.error);
-            reject('Error getting assets');
-        };
-    });
-}
-
-/**
  * Deletes an asset from the database.
  * @param {*} id - the id of the asset to be deleted
- * @returns {Promise<IDBDatabase>} Promise that resolves when the asset has been deleted
+ * @returns {Promise} Promise that resolves when the asset has been deleted
  */
 function deleteAsset(id) {
     return new Promise((resolve, reject) => {

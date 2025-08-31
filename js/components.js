@@ -1,10 +1,10 @@
 // API Endpoints
-const IMAGE_API_URL = 'https://192.168.0.33/image/images/create-image';
-const MODEL_API_URL = 'https://192.168.0.33/model/models/create-from-image';
+import { IMAGE_API_URL, MODEL_API_URL } from './config.js';
 
 // AFRAME Components
 
 AFRAME.registerComponent('scene-setup', {
+    // This component performs setup operations once the A-Frame scene has completed initialisation.
     init: function () {
         console.log('Scene setup component initialized.');
         const sceneEl = this.el;
@@ -363,6 +363,130 @@ AFRAME.registerComponent('load-model-library', {
     }
 });
 
+AFRAME.registerComponent('card-controls', {
+    // This component handles the in-VR model cards,
+    // including adding, downloading, and deleting.
+    init: function () {
+        const el = this.el;
+        // Use querySelector for element selection
+        const background = el.querySelector('.card-base');
+        const originalColor = background.getAttribute('color');
+        const hoverColor = 'powderblue';
+        const overlay = el.querySelector('.af-card-overlay');
+        const addButton = el.querySelector('.af-add-to-scene');
+        const downloadButton = el.querySelector('.af-download');
+        const deleteButton = el.querySelector('.af-delete');
+        const deleteQuery = el.querySelector('.af-delete-query');
+        const confirmDelete = el.querySelector('.af-confirm-delete');
+        const cancelDelete = el.querySelector('.af-cancel-delete');
+
+        const assetId = parseInt(el.getAttribute('model-id'));
+
+        // Helper function to reset the delete confirmation UI
+        const resetDeleteUI = () => {
+            addButton.setAttribute('visible', 'true');
+            downloadButton.setAttribute('visible', 'true');
+            deleteButton.setAttribute('visible', 'true');
+            deleteQuery.setAttribute('visible', 'false');
+
+            // Re-enable clickability on main buttons
+            addButton.classList.add('clickable');
+            downloadButton.classList.add('clickable');
+            deleteButton.classList.add('clickable');
+
+            // Disable clickability on confirmation buttons
+            confirmDelete.classList.remove('clickable');
+            cancelDelete.classList.remove('clickable');
+        };
+
+        const disableAllButtons = () => {
+            addButton.classList.remove('clickable');
+            downloadButton.classList.remove('clickable');
+            deleteButton.classList.remove('clickable');
+            confirmDelete.classList.remove('clickable');
+            cancelDelete.classList.remove('clickable');
+        };
+
+        // Card Hover Effect
+        el.addEventListener('mouseenter', () => background.setAttribute('color', hoverColor));
+        el.addEventListener('mouseleave', () => background.setAttribute('color', originalColor));
+
+        // Card Click to Toggle Overlay
+        el.addEventListener('click', () => {
+            const isVisible = overlay.getAttribute('visible');
+            overlay.setAttribute('visible', !isVisible);
+            overlay.setAttribute('opacity', isVisible ? '0' : '0.5');
+
+            if (!isVisible) {
+                // If making visible, ensure UI is in its default state
+                resetDeleteUI();
+            } else {
+                disableAllButtons();
+            }
+        });
+
+        // Button Hover Effects
+        addButton.addEventListener('mouseenter', () => addButton.setAttribute('color', hoverColor));
+        addButton.addEventListener('mouseleave', () => addButton.setAttribute('color', originalColor));
+        downloadButton.addEventListener('mouseenter', () => downloadButton.setAttribute('color', hoverColor));
+        downloadButton.addEventListener('mouseleave', () => downloadButton.setAttribute('color', originalColor));
+        deleteButton.addEventListener('mouseenter', () => deleteButton.setAttribute('color', 'tomato'));
+        deleteButton.addEventListener('mouseleave', () => deleteButton.setAttribute('color', 'salmon'));
+        cancelDelete.addEventListener('mouseenter', () => cancelDelete.setAttribute('color', hoverColor));
+        cancelDelete.addEventListener('mouseleave', () => cancelDelete.setAttribute('color', originalColor));
+        confirmDelete.addEventListener('mouseenter', () => confirmDelete.setAttribute('color', 'tomato'));
+        confirmDelete.addEventListener('mouseleave', () => confirmDelete.setAttribute('color', 'salmon'));
+
+        // Button Click Handlers
+        addButton.addEventListener('click', async (event) => {
+            event.stopPropagation(); // Prevent card's click handler from firing
+            await addToScene(assetId);
+        });
+
+        downloadButton.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            await downloadModel(assetId);
+        });
+
+        deleteButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+
+            // Hide main action buttons
+            addButton.setAttribute('visible', 'false');
+            downloadButton.setAttribute('visible', 'false');
+            deleteButton.setAttribute('visible', 'false');
+
+            // Show delete confirmation dialog
+            deleteQuery.setAttribute('visible', 'true');
+
+            // Update clickable classes
+            addButton.classList.remove('clickable');
+            downloadButton.classList.remove('clickable');
+            deleteButton.classList.remove('clickable');
+            confirmDelete.classList.add('clickable');
+            cancelDelete.classList.add('clickable');
+        });
+
+        cancelDelete.addEventListener('click', (event) => {
+            event.stopPropagation();
+            resetDeleteUI();
+        });
+
+        confirmDelete.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            try {
+                await deleteAsset(assetId);
+                el.remove(); // Remove the card from the scene
+                this.el.sceneEl.emit('library-updated');
+            } catch (deleteError) {
+                console.error("Error deleting asset via VR card:", deleteError);
+                resetDeleteUI(); // Reset UI on error
+                this.el.sceneEl.emit('library-updated');
+            }
+        });
+    }
+});
+
 AFRAME.registerComponent('model-entity', {
     init: function () {
         const el = this.el;
@@ -438,8 +562,8 @@ AFRAME.registerComponent('model-entity', {
             // This is now the single source of truth for the selected model
             document.body.dataset.selectedElementId = el.id;
 
+            // Create the UI panel for scaling or removing a model
             if (hasVR) {
-                // VR: Create the panel for scaling or removing a model
                 const cameraRig = document.getElementById('rig');
 
                 // Remove the previous panel if it exists
@@ -450,7 +574,7 @@ AFRAME.registerComponent('model-entity', {
                     if (wasAttachedToThis) return; // If clicking the same model again, just close the panel.
                 }
 
-                // 1. Clone the native UI template
+                // Clone the native UI template
                 const template = document.getElementById('vr-settings-panel-template');
                 const uiPanel = template.cloneNode(true);
 
@@ -458,41 +582,37 @@ AFRAME.registerComponent('model-entity', {
                 uiPanel.dataset.attachedTo = el.id; // Keep track of what model it's for
                 uiPanel.setAttribute('position', '0 0.5 -1.5'); // Position in front of the camera
 
-                // 2. Find the interactive elements within the new panel
+                // Find the interactive elements within the new panel
                 const nameDisplay = uiPanel.querySelector('.model-name-display');
                 const scaleDisplay = uiPanel.querySelector('.vr-scale-display');
                 const plusBtn = uiPanel.querySelector('.vr-scale-plus');
                 const minusBtn = uiPanel.querySelector('.vr-scale-minus');
                 const removeBtn = uiPanel.querySelector('.vr-remove-model');
 
-                // 3. Set the initial values from the clicked model ('el')
+                // Set the initial values from the clicked model ('el')
                 let currentScale = parseFloat(el.getAttribute('model-scale')) || 1.0;
                 nameDisplay.setAttribute('value', el.getAttribute('name'));
                 scaleDisplay.setAttribute('value', currentScale.toFixed(2));
 
-                // 4. Add event listeners to the buttons
+                // Add event listeners to the buttons
+                // Increase Scale
                 plusBtn.addEventListener('click', function (evt) {
                     evt.stopPropagation();
                     currentScale = Math.min(5.0, currentScale + 0.25); // Max scale 5.0
                     handleRange({ value: currentScale });
-                    // el.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
-                    // el.setAttribute('model-scale', currentScale);
                     scaleDisplay.setAttribute('value', currentScale.toFixed(2));
                 });
-
+                // Decrease Scale
                 minusBtn.addEventListener('click', function (evt) {
                     evt.stopPropagation();
                     currentScale = Math.max(0.25, currentScale - 0.25); // Min scale 0.25
                     handleRange({ value: currentScale });
-                    // el.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
-                    // el.setAttribute('model-scale', currentScale);
                     scaleDisplay.setAttribute('value', currentScale.toFixed(2));
                 });
-
+                // Remove model from scene
                 removeBtn.addEventListener('click', function (evt) {
                     evt.stopPropagation();
-                    removeModel(); // Call your existing remove function
-                    // uiPanel.remove(); // Remove the panel itself
+                    removeModel();
                     cameraRig.removeChild(uiPanel);
                 });
 
@@ -500,7 +620,7 @@ AFRAME.registerComponent('model-entity', {
                     mouseCursor.removeAttribute('mouse-manipulation');
                 });
 
-                // 5. Attach the fully configured panel to the camera rig
+                // Attach the fully configured panel to the camera rig
                 cameraRig.appendChild(uiPanel);
 
             } else {
@@ -508,11 +628,11 @@ AFRAME.registerComponent('model-entity', {
                 const desktopUi = document.getElementsByClassName('desktop-model-interaction');
                 desktopUi[0].style.display = 'flex';
                 document.getElementById('desktop-model-name').textContent = el.getAttribute('name');
+                // Update the size value in the desktop UI
+                const currentScale = parseFloat(el.getAttribute('model-scale')) || 1.0;
+                setSizeValue(currentScale);
             }
-
-            // Update the size value in both UIs
-            const currentScale = parseFloat(el.getAttribute('model-scale')) || 1.0;
-            setSizeValue(currentScale);
+            
         });
     }
 });
@@ -678,128 +798,3 @@ AFRAME.registerComponent('generate-model', {
     }
 });
 
-AFRAME.registerComponent('card-controls', {
-    // This component handles the in-VR model cards,
-    // including adding, downloading, and deleting.
-    init: function () {
-        const el = this.el;
-        // Use querySelector for safer element selection
-        const background = el.querySelector('.card-base');
-        const originalColor = background.getAttribute('color');
-        const hoverColor = 'powderblue';
-        const overlay = el.querySelector('.af-card-overlay');
-        const addButton = el.querySelector('.af-add-to-scene');
-        const downloadButton = el.querySelector('.af-download');
-        const deleteButton = el.querySelector('.af-delete');
-        const deleteQuery = el.querySelector('.af-delete-query');
-        const confirmDelete = el.querySelector('.af-confirm-delete');
-        const cancelDelete = el.querySelector('.af-cancel-delete');
-
-        const assetId = parseInt(el.getAttribute('model-id'));
-
-        // Helper function to reset the delete confirmation UI
-        const resetDeleteUI = () => {
-            addButton.setAttribute('visible', 'true');
-            downloadButton.setAttribute('visible', 'true');
-            deleteButton.setAttribute('visible', 'true');
-            deleteQuery.setAttribute('visible', 'false');
-
-            // Re-enable clickability on main buttons
-            addButton.classList.add('clickable');
-            downloadButton.classList.add('clickable');
-            deleteButton.classList.add('clickable');
-
-            // Disable clickability on confirmation buttons
-            confirmDelete.classList.remove('clickable');
-            cancelDelete.classList.remove('clickable');
-        };
-
-        const disableAllButtons = () => {
-            addButton.classList.remove('clickable');
-            downloadButton.classList.remove('clickable');
-            deleteButton.classList.remove('clickable');
-            confirmDelete.classList.remove('clickable');
-            cancelDelete.classList.remove('clickable');
-        };
-
-        // --- DEFINE LISTENERS ONCE ---
-
-        // 1. Card Hover Effect
-        el.addEventListener('mouseenter', () => background.setAttribute('color', hoverColor));
-        el.addEventListener('mouseleave', () => background.setAttribute('color', originalColor));
-
-        // 2. Card Click to Toggle Overlay
-        el.addEventListener('click', () => {
-            const isVisible = overlay.getAttribute('visible');
-            overlay.setAttribute('visible', !isVisible);
-            overlay.setAttribute('opacity', isVisible ? '0' : '0.5');
-
-            if (!isVisible) {
-                // If making visible, ensure UI is in its default state
-                resetDeleteUI();
-            } else {
-                disableAllButtons();
-            }
-        });
-
-        // 3. Button Hover Effects
-        addButton.addEventListener('mouseenter', () => addButton.setAttribute('color', hoverColor));
-        addButton.addEventListener('mouseleave', () => addButton.setAttribute('color', originalColor));
-        downloadButton.addEventListener('mouseenter', () => downloadButton.setAttribute('color', hoverColor));
-        downloadButton.addEventListener('mouseleave', () => downloadButton.setAttribute('color', originalColor));
-        deleteButton.addEventListener('mouseenter', () => deleteButton.setAttribute('color', 'tomato'));
-        deleteButton.addEventListener('mouseleave', () => deleteButton.setAttribute('color', 'salmon'));
-        cancelDelete.addEventListener('mouseenter', () => cancelDelete.setAttribute('color', hoverColor));
-        cancelDelete.addEventListener('mouseleave', () => cancelDelete.setAttribute('color', originalColor));
-        confirmDelete.addEventListener('mouseenter', () => confirmDelete.setAttribute('color', 'tomato'));
-        confirmDelete.addEventListener('mouseleave', () => confirmDelete.setAttribute('color', 'salmon'));
-
-        // 4. Button Click Handlers
-        addButton.addEventListener('click', async (event) => {
-            event.stopPropagation(); // Prevent card's click handler from firing
-            await addToScene(assetId);
-        });
-
-        downloadButton.addEventListener('click', async (event) => {
-            event.stopPropagation();
-            await downloadModel(assetId);
-        });
-
-        deleteButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-
-            // Hide main action buttons
-            addButton.setAttribute('visible', 'false');
-            downloadButton.setAttribute('visible', 'false');
-            deleteButton.setAttribute('visible', 'false');
-
-            // Show delete confirmation dialog
-            deleteQuery.setAttribute('visible', 'true');
-
-            // Update clickable classes
-            addButton.classList.remove('clickable');
-            downloadButton.classList.remove('clickable');
-            deleteButton.classList.remove('clickable');
-            confirmDelete.classList.add('clickable');
-            cancelDelete.classList.add('clickable');
-        });
-
-        cancelDelete.addEventListener('click', (event) => {
-            event.stopPropagation();
-            resetDeleteUI();
-        });
-
-        confirmDelete.addEventListener('click', async (event) => {
-            event.stopPropagation();
-            try {
-                await deleteAsset(assetId);
-                el.remove(); // Remove the card from the scene
-                this.el.sceneEl.emit('library-updated');
-            } catch (deleteError) {
-                console.error("Error deleting asset via VR card:", deleteError);
-                resetDeleteUI(); // Reset UI on error
-                this.el.sceneEl.emit('library-updated');
-            }
-        });
-    }
-});

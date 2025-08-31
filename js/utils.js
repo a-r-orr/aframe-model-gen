@@ -42,10 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// This function checks for VR support and returns true or false.
+/**
+ * Checks for VR support on user's device
+ * @returns true or false
+ */
 async function checkVRSupport() {
     // Check if the WebXR API is available in the browser
-    // return true; // This line is just for testing some VR features on Desktop.
     if (!navigator.xr) {
         return false;
     }
@@ -61,6 +63,10 @@ async function checkVRSupport() {
     }
 }
 
+/**
+ * Update the desktop UI's model scale value
+ * @param {*} value - the value to update to.
+ */
 function setSizeValue(value) {
     document.querySelectorAll('.size-input').forEach(container => {
         const display = container.querySelector('.size-value-display');
@@ -74,8 +80,12 @@ function setSizeValue(value) {
     });
 }
 
+/**
+ * Update the selected model's size.
+ * @param {*} direction - Either -1 or 1, indicating that the model's size should be decreased or increased by one step.
+ */
 function updateSize(direction) {
-    // We only need to read the state from one of them
+    // Only need to read the state from one of them
     const fieldset = document.getElementById('custom-size-input-desktop');
     let currentValue = parseFloat(fieldset.dataset.value);
     const step = parseFloat(fieldset.dataset.step);
@@ -115,6 +125,9 @@ function wrapText(text, maxLength) {
     return lines.join('\n');
 }
 
+/**
+ * Removes the "currently selected" model from the scene
+ */
 function removeModel() {
     const selectedModelID = document.body.dataset.selectedElementId;
     const selectedModelEl = document.getElementById(selectedModelID);
@@ -128,17 +141,12 @@ function removeModel() {
 async function handleRange(detail) {
     console.log(detail);
     const size = detail.value;
-    // const overlay = document.querySelectorAll('.size-input')[0];
-    // console.log(overlay);
     const selectedId = document.body.dataset.selectedElementId;
     const model = document.getElementById(selectedId);
     model.object3D.position.y += (size - model.object3D.scale.y) / 2;
-    console.log((size - model.object3D.scale.y) / 2);
+    
     model.setAttribute('scale', `${size} ${size} ${size}`);
     model.setAttribute('model-scale', size);
-
-    // document.querySelectorAll('.size-input').forEach(container => {
-    // });
 
     const id = parseInt(selectedId.split("-")[1], 10);
     try {
@@ -149,6 +157,10 @@ async function handleRange(detail) {
     }
 }
 
+/**
+ * Adds a new instance of the specified asset to the scene
+ * @param {*} assetId - id of the desired asset
+ */
 async function addToScene(assetId) {
     console.log('Add to Scene clicked for model ID:', assetId);
     const sceneEl = document.querySelector('a-scene');
