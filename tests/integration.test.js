@@ -22,17 +22,16 @@ describe('Model Lifecycle', function() {
     });
 
     it('should add the model to the scene correctly', async function() {
-        await addToScene(testAssetId);
-        const modelInScene = document.getElementById(`model-${testAssetId}`);
+        const modelID = await addToScene(testAssetId);
+        const modelInScene = document.getElementById(modelID);
         chai.expect(modelInScene).to.not.be.null;
     });
 
     it('should remove the model from the scene using removeModel()', async function() {
         // First, add the model so we have something to remove
-        await addToScene(testAssetId);
-        document.body.dataset.selectedElementId = `model-${testAssetId}`;
+        document.body.dataset.selectedElementId = await addToScene(testAssetId);
         
-        removeModel();
+        removeFromScene();
         
         const modelInScene = document.getElementById(`model-${testAssetId}`);
         chai.expect(modelInScene).to.be.null;

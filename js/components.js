@@ -612,7 +612,7 @@ AFRAME.registerComponent('model-entity', {
                 // Remove model from scene
                 removeBtn.addEventListener('click', function (evt) {
                     evt.stopPropagation();
-                    removeModel();
+                    removeFromScene();
                     cameraRig.removeChild(uiPanel);
                 });
 

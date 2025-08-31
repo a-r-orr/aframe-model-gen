@@ -1,4 +1,4 @@
-// Wait for the page content to load, then adjust some setting based on VR capability
+// Wait for the page content to load, then adjust some settings based on VR capability
 document.addEventListener('DOMContentLoaded', async () => {
     const sceneEl = document.querySelector('a-scene');
     const desktopUi = document.getElementById('desktop-ui');
@@ -98,46 +98,9 @@ function updateSize(direction) {
 }
 
 /**
- * Inserts newline characters into a string to wrap it at a given character length.
- * Tries to break lines at spaces.
- * @param {string} text The text to wrap.
- * @param {number} maxLength The maximum number of characters per line.
- * @returns {string} The formatted text with newline characters.
+ * Increases the scale of the selected object, and updates the corresponding database record with the new scale.
+ * @param {*} detail 
  */
-function wrapText(text, maxLength) {
-    if (text.length <= maxLength) {
-        return text;
-    }
-
-    const words = text.split(' ');
-    let currentLine = '';
-    const lines = [];
-
-    words.forEach(word => {
-        if ((currentLine + word).length > maxLength) {
-            lines.push(currentLine.trim());
-            currentLine = '';
-        }
-        currentLine += word + ' ';
-    });
-
-    lines.push(currentLine.trim());
-    return lines.join('\n');
-}
-
-/**
- * Removes the "currently selected" model from the scene
- */
-function removeModel() {
-    const selectedModelID = document.body.dataset.selectedElementId;
-    const selectedModelEl = document.getElementById(selectedModelID);
-    selectedModelEl.remove();
-    const desktopUi = document.getElementsByClassName('desktop-model-interaction');
-    if (desktopUi.length > 0) {
-        desktopUi[0].style.display = 'none';
-    }
-}
-
 async function handleRange(detail) {
     console.log(detail);
     const size = detail.value;
@@ -167,7 +130,8 @@ async function addToScene(assetId) {
     try {
         const asset = await getAsset(assetId);
         const modelUrl = URL.createObjectURL(asset.modelBlob);
-        const modelId = `model-${assetId}`;
+        // Adding the date string to the end of the model's id ensures that multiple copies of the same model behave as expected.
+        const modelId = `model-${assetId}-${Date.now()}`;
         const newModel = document.createElement('a-entity');
         newModel.setAttribute('gltf-model', modelUrl);
         newModel.setAttribute('model-entity', '');
@@ -183,11 +147,30 @@ async function addToScene(assetId) {
         });
 
         sceneEl.appendChild(newModel);
+        return modelId;
     } catch (addError) {
         console.error("Error adding model to scene:", addError);
+        return None;
     }
 }
 
+/**
+ * Removes the "currently selected" model from the scene
+ */
+function removeFromScene() {
+    const selectedModelID = document.body.dataset.selectedElementId;
+    const selectedModelEl = document.getElementById(selectedModelID);
+    selectedModelEl.remove();
+    const desktopUi = document.getElementsByClassName('desktop-model-interaction');
+    if (desktopUi.length > 0) {
+        desktopUi[0].style.display = 'none';
+    }
+}
+
+/**
+ * Downloads the designated model to the user's device in GLB format.
+ * @param {*} assetId - the id of the asset to download.
+ */
 async function downloadModel(assetId) {
     try {
         const asset = await getAsset(assetId);
@@ -208,4 +191,32 @@ async function downloadModel(assetId) {
     } catch (downloadError) {
         console.error("Error downloading model:", downloadError);
     }
+}
+
+/**
+ * Inserts newline characters into a string to wrap it at a given character length.
+ * Tries to break lines at spaces.
+ * @param {string} text The text to wrap.
+ * @param {number} maxLength The maximum number of characters per line.
+ * @returns {string} The formatted text with newline characters.
+ */
+function wrapText(text, maxLength) {
+    if (text.length <= maxLength) {
+        return text;
+    }
+
+    const words = text.split(' ');
+    let currentLine = '';
+    const lines = [];
+
+    words.forEach(word => {
+        if ((currentLine + word).length > maxLength) {
+            lines.push(currentLine.trim());
+            currentLine = '';
+        }
+        currentLine += word + ' ';
+    });
+
+    lines.push(currentLine.trim());
+    return lines.join('\n');
 }

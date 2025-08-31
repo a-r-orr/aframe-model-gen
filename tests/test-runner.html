@@ -7,8 +7,17 @@
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
 </head>
 <body>
+    <!-- A-Frame fixture for integration tests -->
     <a-scene embedded style="display: none;"></a-scene>
+
+    <!-- Mock HTML fixture for the size/scale utility function tests -->
+    <fieldset id="custom-size-input-desktop" data-value="1" data-min="0.25" data-max="5" data-step="0.25" style="display: none;">
+        <div class="size-input">
+            <span class="size-value-display">1.00</span>
+        </div>
+    </fieldset>
     
+    <!-- Mocha's output container -->
     <div id="mocha"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/9.2.2/mocha.min.js"></script>

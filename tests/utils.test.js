@@ -112,3 +112,85 @@ describe('utils.js - downloadModel()', function() {
         await deleteAsset(assetId);
     });
 });
+
+// Test block for setSizeValue() function
+describe('utils.js - setSizeValue()', function() {
+    let fieldset;
+    let display;
+
+    // Before each test, get fresh references to the mock elements
+    beforeEach(function() {
+        fieldset = document.getElementById('custom-size-input-desktop');
+        display = fieldset.querySelector('.size-value-display');
+        // Reset to default state
+        fieldset.dataset.value = '1';
+        display.textContent = '1.00';
+    });
+
+    it('should update the display and dataset with a valid value', function() {
+        setSizeValue(2.5);
+        chai.expect(fieldset.dataset.value).to.equal('2.5');
+        chai.expect(display.textContent).to.equal('2.50');
+    });
+
+    it('should clamp the value to the max if the input is too high', function() {
+        setSizeValue(10); // Max is 5
+        chai.expect(fieldset.dataset.value).to.equal('5');
+        chai.expect(display.textContent).to.equal('5.00');
+    });
+
+    it('should clamp the value to the min if the input is too low', function() {
+        setSizeValue(0); // Min is 0.25
+        chai.expect(fieldset.dataset.value).to.equal('0.25');
+        chai.expect(display.textContent).to.equal('0.25');
+    });
+});
+
+
+// Test block for updateSize() function
+describe('utils.js - updateSize()', function() {
+    let fieldset;
+    let display;
+    let handleRangeCalledWith = null;
+    const originalHandleRange = window.handleRange;
+
+    // Before each test, set up our spies and mock elements
+    beforeEach(function() {
+        fieldset = document.getElementById('custom-size-input-desktop');
+        display = fieldset.querySelector('.size-value-display');
+        
+        // Reset to default state
+        fieldset.dataset.value = '1';
+        display.textContent = '1.00';
+
+        // Spy on handleRange so we can check if it was called correctly
+        // without executing its complex logic (DB calls, etc.)
+        handleRangeCalledWith = null;
+        window.handleRange = (detail) => {
+            handleRangeCalledWith = detail;
+        };
+    });
+
+    // After each test, restore the original handleRange function
+    afterEach(function() {
+        window.handleRange = originalHandleRange;
+    });
+
+    it('should increase the size by one step when direction is 1', function() {
+        updateSize(1); // Initial is 1, step is 0.25
+        chai.expect(fieldset.dataset.value).to.equal('1.25');
+        chai.expect(display.textContent).to.equal('1.25');
+    });
+
+    it('should decrease the size by one step when direction is -1', function() {
+        updateSize(-1); // Initial is 1, step is 0.25
+        chai.expect(fieldset.dataset.value).to.equal('0.75');
+        chai.expect(display.textContent).to.equal('0.75');
+    });
+
+    it('should call handleRange with the correct new value', function() {
+        updateSize(1);
+        chai.expect(handleRangeCalledWith).to.not.be.null;
+        chai.expect(handleRangeCalledWith.value).to.equal(1.25);
+    });
+});
