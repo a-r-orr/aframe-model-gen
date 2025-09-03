@@ -640,77 +640,95 @@ AFRAME.registerComponent('model-entity', {
 AFRAME.registerComponent('generate-image', {
     schema: { color: { default: 'red' } },
     init: function () {
+        const el = this.el;
+        this.defaultColor = '#00AA66';
+
+        // Bind 'this' to the handler functions
+        this.handleMouseEnter = this.handleMouseEnter.bind(this);
+        this.handleMouseLeave = this.handleMouseLeave.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+
+        // Add event listeners
+        el.addEventListener('mouseenter', this.handleMouseEnter);
+        el.addEventListener('mouseleave', this.handleMouseLeave);
+        el.addEventListener('click', this.handleClick);
+    },
+
+    // Add the remove() method for cleanup
+    remove: function() {
+        const el = this.el;
+        console.log("Removing generate-image component and its listeners.");
+
+        // Clean up the listeners
+        el.removeEventListener('mouseenter', this.handleMouseEnter);
+        el.removeEventListener('mouseleave', this.handleMouseLeave);
+        el.removeEventListener('click', this.handleClick);
+    },
+
+    handleMouseEnter: function () {
+        this.el.setAttribute('color', this.data.color);
         const mouseCursor = document.getElementById('mouseCursor');
-        var data = this.data;
-        var el = this.el;
-        // var defaultColor = el.getAttribute('material').color;
-        var defaultColor = '#00AA66';
+        if (mouseCursor.hasAttribute('mouse-manipulation') && mouseCursor.getAttribute('dragging') == 'false') {
+            mouseCursor.removeAttribute('mouse-manipulation');
+        }
+    },
 
-        const prompt = document.getElementById('prompt').getAttribute('value');
-        console.log(prompt);
+    handleMouseLeave: function () {
+        this.el.setAttribute('color', this.defaultColor);
+    },
 
-        el.addEventListener('mouseenter', function () {
-            el.setAttribute('color', data.color);
-            if (mouseCursor.hasAttribute('mouse-manipulation') && mouseCursor.getAttribute('dragging') == 'false') {
-                mouseCursor.removeAttribute('mouse-manipulation');
-            }
-        });
-        el.addEventListener('mouseleave', function () {
-            el.setAttribute('color', defaultColor);
-        });
+    handleClick: async function () {
+        try {
+            const el = this.el;
+            const imageEl = document.getElementById('image');
+            const loadingEl = document.getElementById('loading-image');
+            loadingEl.setAttribute('visible', 'true');
+            imageEl.setAttribute('visible', 'false');
+            const prompt = document.getElementById('prompt').getAttribute('value');
+            
+            console.log("Sending request for image...");
+            const response = await fetch(IMAGE_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            if (!response.ok) throw new Error(`Image API request failed`);
 
-        el.addEventListener('click', async function () {
-            try {
-                const imageEl = document.getElementById('image');
-                const loadingEl = document.getElementById('loading-image');
-                loadingEl.setAttribute('visible', 'true');
-                imageEl.setAttribute('visible', 'false');
-                const prompt = document.getElementById('prompt').getAttribute('value');
-                console.log(prompt);
-                console.log("Sending request for image...")
-                const response = await fetch(IMAGE_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
-                });
-                if (!response.ok) throw new Error(`Image API request failed`);
+            const imageBlob = await response.blob();
 
-                const imageBlob = await response.blob();
+            // Reactivate the "Generate Model" button
+            const modelBox = document.getElementById('model-box');
+            modelBox.setAttribute('generate-model', '');
+            modelBox.setAttribute('color', '#FFC42E'); // Restore original color
+            modelBox.classList.add('clickable');
 
-                // Reactivate the "Generate Model" button
-                const modelBox = document.getElementById('model-box');
-                modelBox.setAttribute('generate-model', '');
-                modelBox.setAttribute('color', '#FFC42E'); // Restore original color
-                modelBox.classList.add('clickable');
+            // Emit a scene-wide event with the blob data
+            console.log("Image generated. Emitting 'image-ready' event.");
+            el.sceneEl.emit('image-ready', { prompt: prompt, imageBlob: imageBlob });
 
-                // Emit a scene-wide event with the blob data
-                console.log("Image generated. Emitting 'image-ready' event.");
-                el.sceneEl.emit('image-ready', { prompt: prompt, imageBlob: imageBlob });
+            // Display the image
+            const imageUrl = URL.createObjectURL(imageBlob);
 
-                // Display the image
-                const imageUrl = URL.createObjectURL(imageBlob);
+            const loader = new THREE.TextureLoader();
+            loader.load(imageUrl, function (texture) {
+                const mesh = imageEl.getObject3D('mesh');
+                if (!mesh) return;
+                mesh.material.map = texture;
+                mesh.material.needsUpdate = true;
+                URL.revokeObjectURL(imageUrl);
+            });
+            imageEl.setAttribute('visible', 'true');
+            loadingEl.setAttribute('visible', 'false');
+            document.getElementById('error').setAttribute('value', '');
+            document.getElementById('error').setAttribute('visible', 'false');
 
-                const loader = new THREE.TextureLoader();
-                loader.load(imageUrl, function (texture) {
-                    const mesh = imageEl.getObject3D('mesh');
-                    if (!mesh) return;
-                    mesh.material.map = texture;
-                    mesh.material.needsUpdate = true;
-                    URL.revokeObjectURL(imageUrl);
-                });
-                imageEl.setAttribute('visible', 'true');
-                loadingEl.setAttribute('visible', 'false');
-                document.getElementById('error').setAttribute('value', '');
-                document.getElementById('error').setAttribute('visible', 'false');
-
-            } catch (error) {
-                console.error('Error fetching image:', error);
-                document.getElementById('error').setAttribute('value', 'Could not generate image');
-                document.getElementById('error').setAttribute('visible', 'true');
-                const loadingEl = document.getElementById('loading-image');
-                loadingEl.setAttribute('visible', 'false');
-            }
-        });
+        } catch (error) {
+            console.error('Error fetching image:', error);
+            document.getElementById('error').setAttribute('value', 'Could not generate image');
+            document.getElementById('error').setAttribute('visible', 'true');
+            const loadingEl = document.getElementById('loading-image');
+            loadingEl.setAttribute('visible', 'false');
+        }
     }
 });
 
@@ -720,81 +738,104 @@ AFRAME.registerComponent('generate-model', {
         const el = this.el;
         const sceneEl = this.el.sceneEl;
         var data = this.data;
-        // var defaultColor = el.getAttribute('material').color;
         var defaultColor = '#FFC42E';
 
-        el.addEventListener('mouseenter', function () {
-            el.setAttribute('color', data.color);
-            if (mouseCursor.hasAttribute('mouse-manipulation') && mouseCursor.getAttribute('dragging') == 'false') {
-                mouseCursor.removeAttribute('mouse-manipulation');
-            }
-        });
-        el.addEventListener('mouseleave', function () {
-            el.setAttribute('color', defaultColor);
-        });
+        this.handleMouseEnter = this.handleMouseEnter.bind(this);
+        this.handleMouseLeave = this.handleMouseLeave.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+        this.handleImageReady = this.handleImageReady.bind(this);
 
-        // A place to store the blob when we receive it
-        this.imageToSend = null;
+        el.setAttribute('color', defaultColor);
 
-        // 👂 LISTEN for the custom event on the scene
-        sceneEl.addEventListener('image-ready', (event) => {
-            console.log("Component 'generate-model' heard the 'image-ready' event.");
-            // Grab the blob from the event's 'detail' object and store it
-            this.imageToSend = event.detail.imageBlob;
-            this.prompt = event.detail.prompt;
-            // Optional: change the button color to show it's ready
-            el.setAttribute('color', '#FFC42E');
-            defaultColor = '#FFC42E';
-        });
+        // --- ADD EVENT LISTENERS ---
+        el.addEventListener('mouseenter', this.handleMouseEnter);
+        el.addEventListener('mouseleave', this.handleMouseLeave);
+        el.addEventListener('click', this.handleClick);
+        sceneEl.addEventListener('image-ready', this.handleImageReady);
+    },
 
-        // Add a click listener for this component's box
-        el.addEventListener('click', async () => {
-            if (!this.imageToSend) {
-                console.error("Model generator clicked, but no image is ready!");
-                document.getElementById('error').setAttribute('visible', 'true');
-                document.getElementById('error').setAttribute('value', 'Generate an image first');
-                return;
-            }
+    // This function is automatically called by A-Frame when the component is detached.
+    remove: function () {
+        const el = this.el;
+        const sceneEl = this.el.sceneEl;
+        console.log("Removing generate-model component and its listeners.");
 
-            console.log("Sending stored image to model API...");
-            const formData = new FormData();
-            formData.append('image_file', this.imageToSend, 'seed_image.png');
+        // Clean up event listeners
+        el.removeEventListener('mouseenter', this.handleMouseEnter);
+        el.removeEventListener('mouseleave', this.handleMouseLeave);
+        el.removeEventListener('click', this.handleClick);
+        sceneEl.removeEventListener('image-ready', this.handleImageReady);
+    },
+
+    // Event Handler Functions
+    handleMouseEnter: function () {
+        this.el.setAttribute('color', this.data.color);
+        if (mouseCursor.hasAttribute('mouse-manipulation') && mouseCursor.getAttribute('dragging') == 'false') {
+            mouseCursor.removeAttribute('mouse-manipulation');
+        }
+    },
+
+    handleMouseLeave: function () {
+        // Use the stored defaultColor from the component's state
+        this.el.setAttribute('color', this.defaultColor || '#FFC42E');
+    },
+
+    handleImageReady: function (event) {
+        console.log("Component 'generate-model' heard the 'image-ready' event.");
+        this.imageToSend = event.detail.imageBlob;
+        this.prompt = event.detail.prompt;
+        
+        // Store the new "ready" color so handleMouseLeave uses it
+        this.defaultColor = '#FFC42E'; 
+        this.el.setAttribute('color', this.defaultColor);
+    },
+
+    handleClick: async function () {
+        if (!this.imageToSend) {
+            console.error("Model generator clicked, but no image is ready!");
+            document.getElementById('error').setAttribute('visible', 'true');
+            document.getElementById('error').setAttribute('value', 'Generate an image first');
+            return;
+        }
+
+        console.log("Sending stored image to model API...");
+        const formData = new FormData();
+        formData.append('image_file', this.imageToSend, 'seed_image.png');
+
+        try {
+            const loadingEl = document.getElementById('loading-image');
+            loadingEl.setAttribute('visible', 'true');
+
+            const response = await fetch(MODEL_API_URL, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error(`Model API request failed: ${response.statusText}`);
+
+            const modelBlob = await response.blob();
+            console.log("Received model from second API", modelBlob);
 
             try {
-                const loadingEl = document.getElementById('loading-image');
-                loadingEl.setAttribute('visible', 'true');
-
-                const response = await fetch(MODEL_API_URL, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) throw new Error(`Model API request failed: ${response.statusText}`);
-
-                const modelBlob = await response.blob();
-                console.log("Received model from second API", modelBlob);
-
-                try {
-                    const new_model_id = await addAsset(this.prompt, this.imageToSend, modelBlob);
-                    console.log('Asset blob successfully saved.')
-                    this.el.sceneEl.emit('library-updated');
-                    await addToScene(new_model_id);
-                } catch (dbError) {
-                    console.error('Error saving asset blob to local DB: ', dbError);
-                }
-
-                loadingEl.setAttribute('visible', 'false');
-                document.getElementById('error').setAttribute('value', '');
-                document.getElementById('error').setAttribute('visible', 'false');
-
-            } catch (error) {
-                console.error('Error sending image to model API:', error);
-                document.getElementById('error').setAttribute('value', 'Could not create model');
-                document.getElementById('error').setAttribute('visible', 'true');
-                const loadingEl = document.getElementById('loading-image');
-                loadingEl.setAttribute('visible', 'false');
+                const new_model_id = await addAsset(this.prompt, this.imageToSend, modelBlob);
+                console.log('Asset blob successfully saved.')
+                this.el.sceneEl.emit('library-updated');
+                await addToScene(new_model_id);
+            } catch (dbError) {
+                console.error('Error saving asset blob to local DB: ', dbError);
             }
-        });
+
+            loadingEl.setAttribute('visible', 'false');
+            document.getElementById('error').setAttribute('value', '');
+            document.getElementById('error').setAttribute('visible', 'false');
+
+        } catch (error) {
+            console.error('Error sending image to model API:', error);
+            document.getElementById('error').setAttribute('value', 'Could not create model');
+            document.getElementById('error').setAttribute('visible', 'true');
+            const loadingEl = document.getElementById('loading-image');
+            loadingEl.setAttribute('visible', 'false');
+        }
     }
 });
 
